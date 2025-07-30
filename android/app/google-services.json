@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "238571619654",
+    "project_id": "eventmanager-mkx",
+    "storage_bucket": "eventmanager-mkx.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238571619654:android:f1ab8d0ed7da2e701a9147",
+        "android_client_info": {
+          "package_name": "com.mkx.event_management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_bKbDAQyipRkHmt7tuiSi2NgZ0DrJZ0Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
