@@ -69,21 +69,21 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-      _authError = null;
-    });
-    try {
-      await _authService.signInWithGoogle();
-      _onLoginSuccess();
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _authError = 'Sign in failed: $e';
-      });
-    }
-  }
+  // Future<void> _signInWithGoogle() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //     _authError = null;
+  //   });
+  //   try {
+  //     await _authService.signInWithGoogle();
+  //     _onLoginSuccess();
+  //   } catch (e) {
+  //     setState(() {
+  //       _isLoading = false;
+  //       _authError = 'Sign in failed: $e';
+  //     });
+  //   }
+  // }
 
   Future<void> _signInWithEmail() async {
     if (!_formKey.currentState!.validate()) return;
@@ -365,65 +365,65 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
                     const SizedBox(height: 30),
-                    // Google Sign In Button
-                    Container(
-                      width: double.infinity,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _isLoading ? null : _signInWithGoogle,
-                          borderRadius: BorderRadius.circular(15),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_isLoading)
-                                  const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF667eea),
-                                      ),
-                                    ),
-                                  )
-                                else ...[
-                                  Image.network(
-                                    'https://developers.google.com/identity/images/g-logo.png',
-                                    height: 24,
-                                    width: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Sign in with Google',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF667eea),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    // // Google Sign In Button
+                    // Container(
+                    //   width: double.infinity,
+                    //   height: 55,
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.white,
+                    //     borderRadius: BorderRadius.circular(15),
+                    //     boxShadow: [
+                    //       BoxShadow(
+                    //         color: Colors.black.withOpacity(0.1),
+                    //         blurRadius: 10,
+                    //         offset: const Offset(0, 5),
+                    //       ),
+                    //     ],
+                    //   ),
+                    //   child: Material(
+                    //     color: Colors.transparent,
+                    //     child: InkWell(
+                    //       onTap: _isLoading ? null : _signInWithGoogle,
+                    //       borderRadius: BorderRadius.circular(15),
+                    //       child: Padding(
+                    //         padding: const EdgeInsets.symmetric(horizontal: 20),
+                    //         child: Row(
+                    //           mainAxisAlignment: MainAxisAlignment.center,
+                    //           children: [
+                    //             if (_isLoading)
+                    //               const SizedBox(
+                    //                 width: 20,
+                    //                 height: 20,
+                    //                 child: CircularProgressIndicator(
+                    //                   strokeWidth: 2,
+                    //                   valueColor: AlwaysStoppedAnimation<Color>(
+                    //                     Color(0xFF667eea),
+                    //                   ),
+                    //                 ),
+                    //               )
+                    //             else ...[
+                    //               Image.network(
+                    //                 'https://developers.google.com/identity/images/g-logo.png',
+                    //                 height: 24,
+                    //                 width: 24,
+                    //               ),
+                    //               const SizedBox(width: 12),
+                    //               const Text(
+                    //                 'Sign in with Google',
+                    //                 style: TextStyle(
+                    //                   fontSize: 16,
+                    //                   fontWeight: FontWeight.bold,
+                    //                   color: Color(0xFF667eea),
+                    //                 ),
+                    //               ),
+                    //             ],
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 20),
                     // Guest Mode Button
                     Container(
                       width: double.infinity,
