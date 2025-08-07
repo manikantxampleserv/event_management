@@ -189,8 +189,9 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo and Title
                       Container(
                         width: 100,
                         height: 100,
@@ -370,6 +371,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 30),
+
                       // // Google Sign In Button
                       // Container(
                       //   width: double.infinity,
@@ -430,36 +432,34 @@ class _LoginScreenState extends State<LoginScreen>
                       // ),
                       // const SizedBox(height: 20),
                       // Guest Mode Button
-                      Container(
-                        width: double.infinity,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Get.offAllNamed('/home');
-                            },
-                            borderRadius: BorderRadius.circular(15),
-                            child: const Center(
-                              child: Text(
-                                'Continue as Guest',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
+                      // Container(
+                      //   width: double.infinity,
+                      //   height: 55,
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.transparent,
+                      //     borderRadius: BorderRadius.circular(15),
+                      //     border: Border.all(color: Colors.white, width: 2),
+                      //   ),
+                      //   child: Material(
+                      //     color: Colors.transparent,
+                      //     child: InkWell(
+                      //       onTap: () {
+                      //         Get.offAllNamed('/home');
+                      //       },
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       child: const Center(
+                      //         child: Text(
+                      //           'Continue as Guest',
+                      //           style: TextStyle(
+                      //             fontSize: 16,
+                      //             fontWeight: FontWeight.bold,
+                      //             color: Colors.white,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       Text(
                         'By continuing, you agree to our Terms of Service and Privacy Policy',
                         style: TextStyle(
