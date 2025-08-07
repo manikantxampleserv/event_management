@@ -1,3 +1,4 @@
+import 'package:event_management/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -738,7 +739,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: ElevatedButton.icon(
                               onPressed: () async {
                                 await authService.signOut();
-                                Get.offAllNamed('/login');
+                                Get.offAll(() => LoginScreen());
                               },
                               icon: const Icon(
                                 Icons.logout,

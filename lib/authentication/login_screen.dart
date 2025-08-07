@@ -70,21 +70,28 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // Future<void> _signInWithGoogle() async {
-  //   setState(() {
-  //     _isLoading = true;
-  //     _authError = null;
-  //   });
-  //   try {
-  //     await _authService.signInWithGoogle();
-  //     _onLoginSuccess();
-  //   } catch (e) {
-  //     setState(() {
-  //       _isLoading = false;
-  //       _authError = 'Sign in failed: $e';
-  //     });
-  //   }
-  // }
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _authError = null;
+    });
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      if (userCredential != null) {
+        _onLoginSuccess('Welcome back!');
+      } else {
+        setState(() {
+          _isLoading = false;
+          _authError = 'Google sign in was cancelled';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _authError = 'Google sign in failed: ${_getAuthErrorMessage(e)}';
+      });
+    }
+  }
 
   Future<void> _signInWithEmail() async {
     if (!_formKey.currentState!.validate()) return;
@@ -97,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen>
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      _onLoginSuccess();
+      _onLoginSuccess('Login successful!');
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -117,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen>
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      _onLoginSuccess();
+      _onLoginSuccess('Registration successful!');
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -139,6 +146,10 @@ class _LoginScreenState extends State<LoginScreen>
           return 'Invalid email address.';
         case 'weak-password':
           return 'Password should be at least 6 characters.';
+        case 'user-disabled':
+          return 'This user account has been disabled.';
+        case 'too-many-requests':
+          return 'Too many requests. Please try again later.';
         default:
           return e.message ?? 'Authentication error.';
       }
@@ -146,11 +157,11 @@ class _LoginScreenState extends State<LoginScreen>
     return e.toString();
   }
 
-  void _onLoginSuccess() {
+  void _onLoginSuccess(String message) {
     setState(() {
       _isLoading = false;
     });
-    _showSnackBar('Login successful!');
+    _showSnackBar(message);
     // Use WidgetsBinding to schedule navigation after the current frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.offAll(() => const HomeScreen());
@@ -214,9 +225,9 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Welcome to EventFlow',
+                        'Welcome to Event Management',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -228,6 +239,99 @@ class _LoginScreenState extends State<LoginScreen>
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 40),
+
+                      // Google Sign In Button
+                      // Container(
+                      //   width: double.infinity,
+                      //   height: 55,
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.white,
+                      //     borderRadius: BorderRadius.circular(15),
+                      //     boxShadow: [
+                      //       BoxShadow(
+                      //         color: Colors.black.withOpacity(0.1),
+                      //         blurRadius: 10,
+                      //         offset: const Offset(0, 5),
+                      //       ),
+                      //     ],
+                      //   ),
+                      //   child: Material(
+                      //     color: Colors.transparent,
+                      //     child: InkWell(
+                      //       onTap: _isLoading ? null : _signInWithGoogle,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       child: Padding(
+                      //         padding: const EdgeInsets.symmetric(
+                      //           horizontal: 20,
+                      //         ),
+                      //         child: Row(
+                      //           mainAxisAlignment: MainAxisAlignment.center,
+                      //           children: [
+                      //             if (_isLoading)
+                      //               const SizedBox(
+                      //                 width: 20,
+                      //                 height: 20,
+                      //                 child: CircularProgressIndicator(
+                      //                   strokeWidth: 2,
+                      //                   valueColor:
+                      //                       AlwaysStoppedAnimation<Color>(
+                      //                         Color(0xFF667eea),
+                      //                       ),
+                      //                 ),
+                      //               )
+                      //             else ...[
+                      //               Image.network(
+                      //                 'https://developers.google.com/identity/images/g-logo.png',
+                      //                 height: 24,
+                      //                 width: 24,
+                      //               ),
+                      //               const SizedBox(width: 12),
+                      //               const Text(
+                      //                 'Sign in with Google',
+                      //                 style: TextStyle(
+                      //                   fontSize: 16,
+                      //                   fontWeight: FontWeight.bold,
+                      //                   color: Color(0xFF667eea),
+                      //                 ),
+                      //               ),
+                      //             ],
+                      //           ],
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      // const SizedBox(height: 20),
+
+                      // // Divider
+                      // Row(
+                      //   children: [
+                      //     Expanded(
+                      //       child: Container(
+                      //         height: 1,
+                      //         color: Colors.white.withOpacity(0.3),
+                      //       ),
+                      //     ),
+                      //     Padding(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 16),
+                      //       child: Text(
+                      //         'or',
+                      //         style: TextStyle(
+                      //           color: Colors.white.withOpacity(0.7),
+                      //           fontWeight: FontWeight.w500,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //     Expanded(
+                      //       child: Container(
+                      //         height: 1,
+                      //         color: Colors.white.withOpacity(0.3),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 20),
+
                       // Email/Password Login/Register Form
                       Container(
                         padding: const EdgeInsets.all(20),
@@ -371,95 +475,6 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 30),
-
-                      // // Google Sign In Button
-                      // Container(
-                      //   width: double.infinity,
-                      //   height: 55,
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.white,
-                      //     borderRadius: BorderRadius.circular(15),
-                      //     boxShadow: [
-                      //       BoxShadow(
-                      //         color: Colors.black.withOpacity(0.1),
-                      //         blurRadius: 10,
-                      //         offset: const Offset(0, 5),
-                      //       ),
-                      //     ],
-                      //   ),
-                      //   child: Material(
-                      //     color: Colors.transparent,
-                      //     child: InkWell(
-                      //       onTap: _isLoading ? null : _signInWithGoogle,
-                      //       borderRadius: BorderRadius.circular(15),
-                      //       child: Padding(
-                      //         padding: const EdgeInsets.symmetric(horizontal: 20),
-                      //         child: Row(
-                      //           mainAxisAlignment: MainAxisAlignment.center,
-                      //           children: [
-                      //             if (_isLoading)
-                      //               const SizedBox(
-                      //                 width: 20,
-                      //                 height: 20,
-                      //                 child: CircularProgressIndicator(
-                      //                   strokeWidth: 2,
-                      //                   valueColor: AlwaysStoppedAnimation<Color>(
-                      //                     Color(0xFF667eea),
-                      //                   ),
-                      //                 ),
-                      //               )
-                      //             else ...[
-                      //               Image.network(
-                      //                 'https://developers.google.com/identity/images/g-logo.png',
-                      //                 height: 24,
-                      //                 width: 24,
-                      //               ),
-                      //               const SizedBox(width: 12),
-                      //               const Text(
-                      //                 'Sign in with Google',
-                      //                 style: TextStyle(
-                      //                   fontSize: 16,
-                      //                   fontWeight: FontWeight.bold,
-                      //                   color: Color(0xFF667eea),
-                      //                 ),
-                      //               ),
-                      //             ],
-                      //           ],
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      // const SizedBox(height: 20),
-                      // Guest Mode Button
-                      // Container(
-                      //   width: double.infinity,
-                      //   height: 55,
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.transparent,
-                      //     borderRadius: BorderRadius.circular(15),
-                      //     border: Border.all(color: Colors.white, width: 2),
-                      //   ),
-                      //   child: Material(
-                      //     color: Colors.transparent,
-                      //     child: InkWell(
-                      //       onTap: () {
-                      //         Get.offAllNamed('/home');
-                      //       },
-                      //       borderRadius: BorderRadius.circular(15),
-                      //       child: const Center(
-                      //         child: Text(
-                      //           'Continue as Guest',
-                      //           style: TextStyle(
-                      //             fontSize: 16,
-                      //             fontWeight: FontWeight.bold,
-                      //             color: Colors.white,
-                      //           ),
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
                       Text(
                         'By continuing, you agree to our Terms of Service and Privacy Policy',
                         style: TextStyle(
