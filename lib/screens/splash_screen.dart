@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:event_management/authentication/login_screen.dart';
+import 'package:event_management/screens/home_screen.dart';
+import 'package:event_management/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -57,9 +60,14 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animations
     _startAnimations();
 
-    // Navigate to home screen after delay
+    // Navigate to home or login screen after delay
     Future.delayed(const Duration(seconds: 4), () {
-      Get.offAllNamed('/login');
+      final authService = Get.find<AuthService>();
+      if (authService.isLoggedIn) {
+        Get.offAll(() => const HomeScreen());
+      } else {
+        Get.offAll(() => const LoginScreen());
+      }
     });
   }
 

@@ -23,9 +23,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar with Image
           SliverAppBar(
             expandedHeight: 300,
+            automaticallyImplyLeading: false,
             pinned: true,
             leading: null,
             backgroundColor: const Color(0xFF667eea),
@@ -102,7 +102,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ),
 
-          // Event Details
           SliverToBoxAdapter(
             child: Container(
               color: Colors.white,
@@ -111,7 +110,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Description
                     const Text(
                       'Description',
                       style: TextStyle(
@@ -130,8 +128,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
-                    // Event Details Grid
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -218,14 +214,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       const SizedBox(height: 30),
                     ],
 
-                    // Price and Booking Section
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                         ),
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
                         children: [
@@ -358,7 +353,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           backgroundColor: const Color(0xFF667eea),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 5,
                         ),
@@ -373,7 +368,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),

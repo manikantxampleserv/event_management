@@ -106,11 +106,11 @@ class _EventListScreenState extends State<EventListScreen> {
             children: [
               // Search Bar
               Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(10),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -135,14 +135,13 @@ class _EventListScreenState extends State<EventListScreen> {
                 ),
               ),
 
-              // Events List
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
                     ),
                   ),
                   child: Obx(() {
@@ -181,7 +180,10 @@ class _EventListScreenState extends State<EventListScreen> {
                     }
 
                     return ListView.builder(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
                       itemCount: eventService.filteredEvents.length,
                       itemBuilder: (context, index) {
                         EventModel event = eventService.filteredEvents[index];
@@ -203,7 +205,7 @@ class _EventListScreenState extends State<EventListScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -220,8 +222,8 @@ class _EventListScreenState extends State<EventListScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
               ),
               image: DecorationImage(
                 image: NetworkImage(event.imageUrl),
@@ -231,8 +233,8 @@ class _EventListScreenState extends State<EventListScreen> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
                 ),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -386,7 +388,7 @@ class _EventListScreenState extends State<EventListScreen> {
                         backgroundColor: const Color(0xFF667eea),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: const Text('View Details'),

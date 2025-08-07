@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:get/get.dart';
+import '../services/profile_service.dart';
 
 class AuthService extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,7 +30,14 @@ class AuthService extends GetxController {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      return await _auth.signInWithCredential(credential);
+
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      if (userCredential.user != null) {
+        await _handleProfileCreation(userCredential.user!);
+      }
+
+      return userCredential;
     } catch (e) {
       print('Error signing in with Google: $e');
       rethrow;
@@ -39,10 +46,16 @@ class AuthService extends GetxController {
 
   Future<UserCredential?> signInWithEmail(String email, String password) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      if (userCredential.user != null) {
+        await _handleProfileCreation(userCredential.user!);
+      }
+
+      return userCredential;
     } catch (e) {
       print('Error signing in with email: $e');
       rethrow;
@@ -51,16 +64,56 @@ class AuthService extends GetxController {
 
   Future<UserCredential?> registerWithEmail(
     String email,
-    String password,
-  ) async {
+    String password, {
+    String? displayName,
+  }) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      if (displayName != null && displayName.isNotEmpty) {
+        await userCredential.user?.updateDisplayName(displayName);
+      }
+
+      if (userCredential.user != null) {
+        await _handleProfileCreation(userCredential.user!, isNewUser: true);
+      }
+
+      return userCredential;
     } catch (e) {
       print('Error registering with email: $e');
       rethrow;
+    }
+  }
+
+  Future<void> _handleProfileCreation(
+    User firebaseUser, {
+    bool isNewUser = false,
+  }) async {
+    try {
+      ProfileService profileService;
+      if (Get.isRegistered<ProfileService>()) {
+        profileService = Get.find<ProfileService>();
+      } else {
+        profileService = Get.put(ProfileService());
+      }
+
+      if (isNewUser) {
+        await profileService.createProfileOnSignUp(
+          firebaseUser.uid,
+          firebaseUser.email ?? '',
+          name: firebaseUser.displayName ?? 'New User',
+          photoUrl: firebaseUser.photoURL,
+        );
+        print('Profile created for new user: ${firebaseUser.uid}');
+      } else {
+        await profileService.fetchProfile(firebaseUser.uid);
+        print('Profile fetched/created for user: ${firebaseUser.uid}');
+      }
+    } catch (e) {
+      print('Error handling profile creation: $e');
     }
   }
 
@@ -68,6 +121,11 @@ class AuthService extends GetxController {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
+
+      if (Get.isRegistered<ProfileService>()) {
+        final profileService = Get.find<ProfileService>();
+        profileService.profile.value = null;
+      }
     } catch (e) {
       print('Error signing out: $e');
       rethrow;
@@ -91,4 +149,11 @@ class AuthService extends GetxController {
   }
 
   bool get isGuest => _auth.currentUser == null;
+
+  Future<void> syncProfile() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      await _handleProfileCreation(currentUser);
+    }
+  }
 }

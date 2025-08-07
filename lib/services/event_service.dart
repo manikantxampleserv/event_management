@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import '../models/event_model.dart';
@@ -17,7 +16,6 @@ class EventService extends GetxController {
     fetchEvents();
   }
 
-  // Fetch all events
   Future<void> fetchEvents() async {
     isLoading.value = true;
     try {
@@ -39,7 +37,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Filter events by category
   void filterByCategory(String category) {
     selectedCategory.value = category;
     if (category.isEmpty) {
@@ -53,13 +50,11 @@ class EventService extends GetxController {
     }
   }
 
-  // Get unique categories
   List<String> getCategories() {
     Set<String> categories = events.map((event) => event.category).toSet();
     return categories.toList()..sort();
   }
 
-  // Get event by ID
   EventModel? getEventById(String id) {
     try {
       return events.firstWhere((event) => event.id == id);
@@ -68,7 +63,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Create new event
   Future<bool> createEvent(EventModel event) async {
     try {
       await _firestore.collection('events').add(event.toFirestore());
@@ -80,7 +74,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Update event
   Future<bool> updateEvent(EventModel event) async {
     try {
       await _firestore
@@ -95,7 +88,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Delete event
   Future<bool> deleteEvent(String eventId) async {
     try {
       await _firestore.collection('events').doc(eventId).delete();
@@ -107,7 +99,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Book ticket (reduce available seats)
   Future<bool> bookTicket(String eventId, int quantity) async {
     try {
       EventModel? event = getEventById(eventId);
@@ -125,7 +116,6 @@ class EventService extends GetxController {
     }
   }
 
-  // Search events
   void searchEvents(String query) {
     if (query.isEmpty) {
       filteredEvents.value = events;
@@ -141,14 +131,12 @@ class EventService extends GetxController {
     }
   }
 
-  // Get upcoming events
   List<EventModel> getUpcomingEvents() {
     DateTime now = DateTime.now();
     return events.where((event) => event.date.isAfter(now)).toList()
       ..sort((a, b) => a.date.compareTo(b.date));
   }
 
-  // Get events by date range
   List<EventModel> getEventsByDateRange(DateTime start, DateTime end) {
     return events
         .where(
