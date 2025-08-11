@@ -1,6 +1,7 @@
 import 'package:event_management/services/auth_service.dart';
 import 'package:event_management/services/event_service.dart';
 import 'package:event_management/services/profile_service.dart';
+import 'package:event_management/services/storage_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,6 +15,7 @@ void main() async {
   Get.put(AuthService());
   Get.put(EventService());
   Get.put(ProfileService());
+  Get.put(StorageService());
   runApp(const MyApp());
 }
 

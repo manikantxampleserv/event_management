@@ -1,9 +1,12 @@
+import 'dart:io';
+import 'dart:async';
 import 'package:event_management/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/storage_service.dart';
 import '../models/profile_model.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService authService = Get.find<AuthService>();
   final ProfileService profileService = Get.put(ProfileService());
+  final StorageService storageService = Get.put(StorageService());
 
   @override
   void initState() {
@@ -25,8 +29,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (userId != null) {
       profileService.fetchProfile(userId);
+
+      // Force refresh after delay to ensure UI updates
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted && profileService.profile.value?.photoUrl != null) {
+          setState(() {}); // Force UI rebuild
+        }
+      });
     } else {
-      print('No user ID found');
+      print('No user found - redirecting to login');
+      Get.offAll(() => LoginScreen());
+    }
+  }
+
+  // Helper method to force close all dialogs
+  void _forceCloseAllDialogs() {
+    print('Forcing close all dialogs...');
+    while (Get.isDialogOpen == true) {
+      print('Closing dialog...');
+      Get.back();
+    }
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+    print('All dialogs closed.');
+  }
+
+  void _refreshProfile() async {
+    final userId = authService.user?.uid;
+    if (userId != null) {
+      await profileService.fetchProfile(userId);
     }
   }
 
@@ -77,7 +110,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
+            if (profile.photoUrl != null && profile.photoUrl!.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _removeProfilePhoto(profile),
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  label: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -118,18 +167,197 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage(ImageSource source, ProfileModel profile) async {
     Navigator.pop(context);
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
 
-    if (pickedFile != null) {
-      // Here you would typically upload the image to Firebase Storage
-      // For now, we'll show a placeholder message
-      Get.snackbar(
-        'Feature Coming Soon',
-        'Image upload functionality will be added soon',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
       );
+
+      if (pickedFile != null) {
+        // Show loading indicator
+        Get.dialog(
+          WillPopScope(
+            onWillPop: () async => false,
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xFF667eea)),
+            ),
+          ),
+          barrierDismissible: false,
+        );
+
+        final userId = authService.user?.uid;
+        if (userId == null) {
+          _forceCloseAllDialogs();
+          Get.snackbar(
+            'Error',
+            'User session expired. Please login again.',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          Get.offAll(() => LoginScreen());
+          return;
+        }
+
+        try {
+          // Delete old Firebase Storage image if exists
+          if (profile.photoUrl != null &&
+              (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
+                  profile.photoUrl!.contains('storage.googleapis.com'))) {
+            await storageService.deleteProfileImage(profile.photoUrl!);
+          }
+
+          // Upload new image
+          final imageUrl = await storageService.uploadProfileImage(
+            userId,
+            File(pickedFile.path),
+          );
+
+          // Force close loading dialog before proceeding
+          _forceCloseAllDialogs();
+
+          if (imageUrl != null) {
+            // Update profile with new image URL
+            final updated = profile.copyWith(
+              photoUrl: imageUrl,
+              updatedAt: DateTime.now(),
+            );
+
+            final success = await profileService.updateProfile(updated);
+
+            if (success) {
+              Get.snackbar(
+                'Success',
+                'Profile image updated successfully',
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 2),
+                snackPosition: SnackPosition.TOP,
+              );
+            } else {
+              Get.snackbar(
+                'Error',
+                'Failed to update profile',
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 2),
+              );
+            }
+          } else {
+            Get.snackbar(
+              'Error',
+              'Failed to upload image. Please try again.',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 2),
+            );
+          }
+        } catch (uploadError) {
+          _forceCloseAllDialogs();
+          Get.snackbar(
+            'Error',
+            'Upload failed: ${uploadError.toString()}',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
+      }
+    } catch (e) {
+      _forceCloseAllDialogs();
+      Get.snackbar(
+        'Error',
+        'Failed to pick image: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
+  Future<void> _removeProfilePhoto(ProfileModel profile) async {
+    Navigator.pop(context);
+
+    final bool? confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Remove Profile Photo'),
+        content: const Text(
+          'Are you sure you want to remove your profile photo?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      Get.dialog(
+        WillPopScope(
+          onWillPop: () async => false,
+          child: const Center(
+            child: CircularProgressIndicator(color: Color(0xFF667eea)),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
+      try {
+        // Only delete from Firebase Storage if it's a Firebase Storage URL
+        if (profile.photoUrl != null &&
+            (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
+                profile.photoUrl!.contains('storage.googleapis.com'))) {
+          await storageService.deleteProfileImage(profile.photoUrl!);
+        }
+
+        // Update profile
+        final updated = profile.copyWith(
+          photoUrl: null,
+          updatedAt: DateTime.now(),
+        );
+
+        final success = await profileService.updateProfile(updated);
+
+        _forceCloseAllDialogs();
+
+        if (success) {
+          Get.snackbar(
+            'Success',
+            'Profile photo removed successfully',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+            snackPosition: SnackPosition.TOP,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            'Failed to remove profile photo',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+        }
+      } catch (e) {
+        _forceCloseAllDialogs();
+        Get.snackbar(
+          'Error',
+          'Failed to remove photo: $e',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
     }
   }
 
@@ -141,42 +369,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        actionsPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        titlePadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         title: const Text('Photo URL'),
         content: SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
           child: TextField(
             controller: urlController,
-            decoration: InputDecoration(hintText: 'Enter Image URL'),
+            decoration: const InputDecoration(
+              hintText: 'Enter Image URL',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              final updated = profile.copyWith(
-                photoUrl: urlController.text.trim(),
-                updatedAt: DateTime.now(),
-              );
-              await profileService.updateProfile(updated);
+              final url = urlController.text.trim();
+              if (url.isNotEmpty) {
+                final updated = profile.copyWith(
+                  photoUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+                await profileService.updateProfile(updated);
+              }
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF667eea),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
             ),
             child: const Text('Update'),
           ),
@@ -262,23 +485,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
-                              radius: 47,
-                              backgroundColor: Colors.grey[100],
-                              backgroundImage:
+                            child: ClipOval(
+                              child:
                                   profile.photoUrl != null &&
                                       profile.photoUrl!.isNotEmpty
-                                  ? NetworkImage(profile.photoUrl!)
-                                  : null,
-                              child:
-                                  (profile.photoUrl == null ||
-                                      profile.photoUrl!.isEmpty)
-                                  ? const Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: Color(0xFF667eea),
+                                  ? Image.network(
+                                      profile.photoUrl!,
+                                      width: 94,
+                                      height: 94,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Container(
+                                              color: Colors.grey[100],
+                                              child: const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Color(0xFF667eea),
+                                                      strokeWidth: 2,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                      errorBuilder: (context, error, stackTrace) {
+                                        print(
+                                          'Error loading image in edit dialog: $error',
+                                        );
+                                        return Container(
+                                          color: Colors.grey[100],
+                                          child: const Icon(
+                                            Icons.person,
+                                            size: 50,
+                                            color: Color(0xFF667eea),
+                                          ),
+                                        );
+                                      },
                                     )
-                                  : null,
+                                  : Container(
+                                      color: Colors.grey[100],
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Color(0xFF667eea),
+                                      ),
+                                    ),
                             ),
                           ),
                           Positioned(
@@ -442,8 +694,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = authService.isGuest;
-
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -471,22 +721,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (!isGuest)
-                      Obx(() {
-                        final profile = profileService.profile.value;
-                        if (profile == null) return const SizedBox();
-                        return Container(
+                    Row(
+                      children: [
+                        // Refresh button
+                        Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white),
-                            onPressed: () => _showEditProfile(profile),
-                            tooltip: 'Edit Profile',
+                            icon: const Icon(
+                              Icons.refresh,
+                              color: Colors.white,
+                            ),
+                            onPressed: _refreshProfile,
+                            tooltip: 'Refresh Profile',
                           ),
-                        );
-                      }),
+                        ),
+                        const SizedBox(width: 8),
+                        // Edit button
+                        Obx(() {
+                          final profile = profileService.profile.value;
+                          if (profile == null) return const SizedBox();
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white),
+                              onPressed: () => _showEditProfile(profile),
+                              tooltip: 'Edit Profile',
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -501,41 +771,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   child: Obx(() {
-                    if (isGuest) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_off,
-                                size: 80,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                'Guest Mode',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Sign in to access your profile and personalized features',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
+                    print(
+                      'Building UI - isLoading: ${profileService.isLoading.value}',
+                    );
+                    print(
+                      'Building UI - profile photoUrl: ${profileService.profile.value?.photoUrl}',
+                    );
 
                     if (profileService.isLoading.value) {
                       return const Center(
@@ -586,12 +827,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
-                              onPressed: () async {
-                                final userId = authService.user?.uid;
-                                if (userId != null) {
-                                  await profileService.fetchProfile(userId);
-                                }
-                              },
+                              onPressed: _refreshProfile,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF667eea),
                                 foregroundColor: Colors.white,
@@ -610,7 +846,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          // Profile Picture Section
+                          // Profile Picture Section with Enhanced Error Handling
                           GestureDetector(
                             onTap: () => _showPhotoOptions(profile),
                             child: Stack(
@@ -632,23 +868,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ],
                                   ),
-                                  child: CircleAvatar(
-                                    radius: 56,
-                                    backgroundColor: Colors.grey[100],
-                                    backgroundImage:
+                                  child: ClipOval(
+                                    child:
                                         profile.photoUrl != null &&
                                             profile.photoUrl!.isNotEmpty
-                                        ? NetworkImage(profile.photoUrl!)
-                                        : null,
-                                    child:
-                                        (profile.photoUrl == null ||
-                                            profile.photoUrl!.isEmpty)
-                                        ? const Icon(
-                                            Icons.person,
-                                            size: 60,
-                                            color: Color(0xFF667eea),
+                                        ? Image.network(
+                                            profile.photoUrl!,
+                                            width: 112,
+                                            height: 112,
+                                            fit: BoxFit.cover,
+                                            loadingBuilder:
+                                                (
+                                                  context,
+                                                  child,
+                                                  loadingProgress,
+                                                ) {
+                                                  if (loadingProgress == null)
+                                                    return child;
+                                                  return Container(
+                                                    color: Colors.grey[100],
+                                                    child: const Center(
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            color: Color(
+                                                              0xFF667eea,
+                                                            ),
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  print(
+                                                    'Error loading main profile image: $error',
+                                                  );
+                                                  return Container(
+                                                    color: Colors.grey[100],
+                                                    child: const Icon(
+                                                      Icons.person,
+                                                      size: 60,
+                                                      color: Color(0xFF667eea),
+                                                    ),
+                                                  );
+                                                },
                                           )
-                                        : null,
+                                        : Container(
+                                            color: Colors.grey[100],
+                                            child: const Icon(
+                                              Icons.person,
+                                              size: 60,
+                                              color: Color(0xFF667eea),
+                                            ),
+                                          ),
                                   ),
                                 ),
                                 Positioned(
@@ -696,7 +968,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.grey[600],
                             ),
                           ),
-
                           const SizedBox(height: 32),
 
                           // Info Cards
@@ -714,6 +985,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Bio',
                               value: profile.bio!,
                             ),
+
+                          // Debug info card (remove in production)
+                          _buildInfoCard(
+                            icon: Icons.image,
+                            title: 'Photo URL',
+                            value: profile.photoUrl ?? 'No photo URL',
+                          ),
 
                           const SizedBox(height: 32),
 
@@ -762,7 +1040,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 32),
 
                           // Footer

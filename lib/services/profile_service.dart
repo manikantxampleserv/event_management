@@ -19,7 +19,11 @@ class ProfileService extends GetxController {
 
       if (doc.exists) {
         print('Document data: ${doc.data()}');
-        profile.value = ProfileModel.fromFirestore(doc);
+        final profileData = ProfileModel.fromFirestore(doc);
+        profile.value = profileData;
+        print(
+          'Profile set successfully with photoUrl: ${profile.value?.photoUrl}',
+        );
       } else {
         print('No document found for userId: $userId - Creating new profile');
 
@@ -59,12 +63,8 @@ class ProfileService extends GetxController {
           .doc(updatedProfile.id)
           .update(updatedProfile.toFirestore());
       profile.value = updatedProfile;
-
-      Get.snackbar(
-        'Success',
-        'Profile updated successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      print(
+        'Profile updated successfully with photoUrl: ${updatedProfile.photoUrl}',
       );
       return true;
     } catch (e) {

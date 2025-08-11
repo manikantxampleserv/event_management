@@ -239,69 +239,53 @@ class _LoginScreenState extends State<LoginScreen>
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 40),
-
-                      // Google Sign In Button
-                      // Container(
-                      //   width: double.infinity,
-                      //   height: 55,
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.white,
-                      //     borderRadius: BorderRadius.circular(15),
-                      //     boxShadow: [
-                      //       BoxShadow(
-                      //         color: Colors.black.withOpacity(0.1),
-                      //         blurRadius: 10,
-                      //         offset: const Offset(0, 5),
-                      //       ),
-                      //     ],
-                      //   ),
-                      //   child: Material(
-                      //     color: Colors.transparent,
-                      //     child: InkWell(
-                      //       onTap: _isLoading ? null : _signInWithGoogle,
-                      //       borderRadius: BorderRadius.circular(15),
-                      //       child: Padding(
-                      //         padding: const EdgeInsets.symmetric(
-                      //           horizontal: 20,
-                      //         ),
-                      //         child: Row(
-                      //           mainAxisAlignment: MainAxisAlignment.center,
-                      //           children: [
-                      //             if (_isLoading)
-                      //               const SizedBox(
-                      //                 width: 20,
-                      //                 height: 20,
-                      //                 child: CircularProgressIndicator(
-                      //                   strokeWidth: 2,
-                      //                   valueColor:
-                      //                       AlwaysStoppedAnimation<Color>(
-                      //                         Color(0xFF667eea),
-                      //                       ),
-                      //                 ),
-                      //               )
-                      //             else ...[
-                      //               Image.network(
-                      //                 'https://developers.google.com/identity/images/g-logo.png',
-                      //                 height: 24,
-                      //                 width: 24,
-                      //               ),
-                      //               const SizedBox(width: 12),
-                      //               const Text(
-                      //                 'Sign in with Google',
-                      //                 style: TextStyle(
-                      //                   fontSize: 16,
-                      //                   fontWeight: FontWeight.bold,
-                      //                   color: Color(0xFF667eea),
-                      //                 ),
-                      //               ),
-                      //             ],
-                      //           ],
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      // const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _isLoading ? null : _signInWithGoogle,
+                            borderRadius: BorderRadius.circular(15),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.network(
+                                    'https://developers.google.com/identity/images/g-logo.png',
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Sign in with Google',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF667eea),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
                       // // Divider
                       // Row(
