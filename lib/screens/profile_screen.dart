@@ -1,13 +1,15 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
+
 import 'package:event_management/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../models/profile_model.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/storage_service.dart';
-import '../models/profile_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

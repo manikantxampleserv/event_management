@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "238571619654",
     "project_id": "eventmanager-mkx",
-"storage_bucket": "eventmanager-mkx.firebasestorage.app"
+    "storage_bucket": "eventmanager-mkx.firebasestorage.app"
   },
   "client": [
     {
@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-"client_id": "238571619654-o67nha974oc8kq3grjgb5i8lclbd06iv.apps.googleusercontent.com",
+          "client_id": "238571619654-1c3ul7p6rjar07860pm8c3er9rjri1po.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mkx.event_management",
+            "certificate_hash": "c274e9e37e9b06a265598fa6bffe78b0154f70b5"
+          }
+        },
+        {
+          "client_id": "238571619654-o67nha974oc8kq3grjgb5i8lclbd06iv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.mkx.event_management",
@@ -22,7 +30,7 @@
           }
         },
         {
-"client_id": "238571619654-vdfbs6gvod2i1ffec82j9986dk51vhc1.apps.googleusercontent.com",
+          "client_id": "238571619654-vdfbs6gvod2i1ffec82j9986dk51vhc1.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,7 +43,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-"client_id": "238571619654-vdfbs6gvod2i1ffec82j9986dk51vhc1.apps.googleusercontent.com",
+              "client_id": "238571619654-vdfbs6gvod2i1ffec82j9986dk51vhc1.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

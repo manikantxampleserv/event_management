@@ -225,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Welcome to Event Management',
+                        'Welcome to Event booking',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

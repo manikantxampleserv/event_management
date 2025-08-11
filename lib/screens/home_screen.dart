@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final EventService eventService = Get.put(EventService());
   final ProfileService profileService = Get.put(ProfileService());
   final TextEditingController _searchController = TextEditingController();
+  final PageController _carouselController = PageController();
+  bool _sampleEventsAdded = false; // Flag to track if sample events were added
+  int _currentCarouselIndex = 0;
+  Timer? _carouselTimer;
 
   @override
   void initState() {
@@ -32,12 +37,46 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userId != null) {
       profileService.fetchProfile(userId);
     }
-    // Add some sample events if the list is empty
+
+    // Only add sample events once and if the list is truly empty
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (eventService.events.isEmpty) {
-        _addSampleEvents();
+      _addSampleEventsIfNeeded();
+      _startAutoSlide();
+    });
+  }
+
+  void _startAutoSlide() {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (eventService.events.isNotEmpty) {
+        final maxIndex = eventService.events.take(5).length - 1;
+        if (_currentCarouselIndex < maxIndex) {
+          _currentCarouselIndex++;
+        } else {
+          _currentCarouselIndex = 0;
+        }
+
+        if (_carouselController.hasClients) {
+          _carouselController.animateToPage(
+            _currentCarouselIndex,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
       }
     });
+  }
+
+  void _stopAutoSlide() {
+    _carouselTimer?.cancel();
+    _carouselTimer = null;
+  }
+
+  void _addSampleEventsIfNeeded() {
+    // Check if events list is empty AND we haven't added sample events yet
+    if (eventService.events.isEmpty && !_sampleEventsAdded) {
+      _addSampleEvents();
+      _sampleEventsAdded = true;
+    }
   }
 
   void _addSampleEvents() {
@@ -188,6 +227,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _carouselController.dispose();
+    _stopAutoSlide();
     super.dispose();
   }
 
@@ -225,9 +266,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: SingleChildScrollView(
                     child: Column(
-                      spacing: 20,
+                      spacing: 10,
                       children: [
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 1),
+                        _buildFeaturedEventsCarousel(),
                         _buildWelcomeMessage(),
                         _buildPopularEventsSection(),
                         _buildRecentEventsSection(),
@@ -261,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Event Management',
+                    'Event Booking',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -315,7 +357,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: TextField(
           controller: _searchController,
           onTap: () {
-            // Navigate to full event list screen with search functionality
             Get.to(() => EventListScreen());
           },
           readOnly: true,
@@ -326,6 +367,207 @@ class _HomeScreenState extends State<HomeScreen> {
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedEventsCarousel() {
+    return Obx(() {
+      List<EventModel> featuredEvents = eventService.events.take(5).toList();
+
+      if (featuredEvents.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        children: [
+          SizedBox(
+            height: 220,
+            child: PageView.builder(
+              controller: _carouselController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentCarouselIndex = index;
+                });
+              },
+              itemCount: featuredEvents.length,
+              itemBuilder: (context, index) {
+                return _buildCarouselItem(featuredEvents[index]);
+              },
+            ),
+          ),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              featuredEvents.length,
+              (index) => GestureDetector(
+                onTap: () {
+                  _carouselController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: _currentCarouselIndex == index ? 24 : 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: _currentCarouselIndex == index
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[300],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildCarouselItem(EventModel event) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+      clipBehavior: Clip.antiAlias,
+      child: GestureDetector(
+        onTap: () {
+          Get.to(() => EventDetailScreen(event: event));
+        },
+        child: Stack(
+          children: [
+            // Background image
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(event.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            // Gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                ),
+              ),
+            ),
+            // Content
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Category badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      event.category,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Event title
+                  Text(
+                    event.title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  // Event details
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        color: Colors.white70,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat('MMM dd, yyyy').format(event.date),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.access_time_outlined,
+                        color: Colors.white70,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        event.time,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // Price
+                  Text(
+                    event.price == 0
+                        ? 'FREE'
+                        : '₹${event.price.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Featured badge
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'FEATURED',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -350,7 +592,9 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return Text(
-              userName.isNotEmpty ? 'Hello, $userName! 👋' : 'Hello! 👋',
+              userName.isNotEmpty
+                  ? 'Hello, ${userName.split(' ').first} 👋'
+                  : 'Hello! 👋',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -605,7 +849,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      '\$${event.price.toStringAsFixed(2)}',
+                      event.price == 0
+                          ? 'FREE'
+                          : '₹${event.price.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

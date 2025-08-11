@@ -149,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Opacity(
                       opacity: _textAnimation.value,
                       child: const Text(
-                        'EventFlow',
+                        'Event Booking',
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
