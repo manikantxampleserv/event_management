@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
+import 'package:event_management/helpers/firebase_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -319,16 +320,39 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             GestureDetector(
               onTap: () => Get.to(() => const ProfileScreen()),
-              child: CircleAvatar(
-                backgroundColor: const Color(0xFF667eea),
-                child: Text(
-                  (profile?.name.isNotEmpty == true)
-                      ? profile!.name[0].toUpperCase()
-                      : firstLetter,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color.fromARGB(255, 140, 158, 234),
+                ),
+                child: ClipOval(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        color: const Color(0xFF667eea),
+                        child: Center(
+                          child: Text(
+                            (profile?.name.isNotEmpty == true)
+                                ? profile!.name[0].toUpperCase()
+                                : firstLetter,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      buildProfileImage(
+                        profile?.photoUrl,
+                        width: 50,
+                        height: 50,
+                      ),
+                    ],
                   ),
                 ),
               ),
