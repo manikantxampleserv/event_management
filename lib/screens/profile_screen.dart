@@ -5,6 +5,7 @@ import 'package:event_management/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/profile_model.dart';
 import '../services/auth_service.dart';
@@ -47,13 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Helper method to force close all dialogs
   void _forceCloseAllDialogs() {
     print('Forcing close all dialogs...');
-    while (Get.isDialogOpen == true) {
-      print('Closing dialog...');
-      Get.back();
-    }
-
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    if (Get.isDialogOpen == true) {
+      Get.until((route) => !Get.isDialogOpen!);
     }
     print('All dialogs closed.');
   }
@@ -63,6 +59,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId != null) {
       await profileService.fetchProfile(userId);
     }
+  }
+
+  // Image URL validation
+  bool _isValidImageUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null &&
+        uri.hasAbsolutePath &&
+        (url.toLowerCase().endsWith('.jpg') ||
+            url.toLowerCase().endsWith('.png') ||
+            url.toLowerCase().endsWith('.jpeg') ||
+            url.toLowerCase().endsWith('.webp'));
   }
 
   void _showPhotoOptions(ProfileModel profile) {
@@ -174,8 +181,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: source,
-        maxWidth: 800,
-        maxHeight: 800,
+        maxWidth: 1024,
+        maxHeight: 1024,
         imageQuality: 85,
       );
 
@@ -183,9 +190,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Show loading indicator
         Get.dialog(
           WillPopScope(
-            onWillPop: () async => false,
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFF667eea)),
+            onWillPop: () async {
+              await storageService.cancelAllOperations();
+              return true;
+            },
+            child: AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: Color(0xFF667eea)),
+                  const SizedBox(height: 16),
+                  const Text('Uploading image...'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () async {
+                      await storageService.cancelAllOperations();
+                      Get.back();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ],
+              ),
             ),
           ),
           barrierDismissible: false,
@@ -205,32 +230,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         try {
-          // Delete old Firebase Storage image if exists
-          if (profile.photoUrl != null &&
-              (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
-                  profile.photoUrl!.contains('storage.googleapis.com'))) {
-            await storageService.deleteProfileImage(profile.photoUrl!);
-          }
-
-          // Upload new image
-          final imageUrl = await storageService.uploadProfileImage(
+          // Upload new image FIRST
+          print('Starting new image upload...');
+          final imageDownloadUrl = await storageService.uploadProfileImage(
             userId,
             File(pickedFile.path),
           );
 
-          // Force close loading dialog before proceeding
-          _forceCloseAllDialogs();
+          if (imageDownloadUrl != null && imageDownloadUrl.isNotEmpty) {
+            // Only delete old image AFTER successful upload
+            if (profile.photoUrl != null &&
+                profile.photoUrl!.isNotEmpty &&
+                storageService.isValidImageUrl(profile.photoUrl) &&
+                (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
+                    profile.photoUrl!.contains('storage.googleapis.com'))) {
+              print('Attempting to delete old image: ${profile.photoUrl}');
 
-          if (imageUrl != null) {
-            // Update profile with new image URL
+              // Try to delete old image, but don't let failure affect the process
+              try {
+                // FIXED: Changed this line to not assign void return to a variable
+                await storageService.deleteProfileImageByPath(
+                  profile.photoUrl!,
+                );
+                print('Old image deletion completed');
+              } catch (deleteError) {
+                print('Delete failed but continuing: $deleteError');
+              }
+            }
+
+            _forceCloseAllDialogs();
+
+            if (!storageService.isValidImageUrl(imageDownloadUrl)) {
+              Get.snackbar(
+                'Error',
+                'Invalid image URL returned. Please try again.',
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+              );
+              return;
+            }
+
             final updated = profile.copyWith(
-              photoUrl: imageUrl,
+              photoUrl: imageDownloadUrl,
               updatedAt: DateTime.now(),
             );
 
             final success = await profileService.updateProfile(updated);
 
             if (success) {
+              setState(() {});
               Get.snackbar(
                 'Success',
                 'Profile image updated successfully',
@@ -249,19 +298,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }
           } else {
+            _forceCloseAllDialogs();
             Get.snackbar(
-              'Error',
-              'Failed to upload image. Please try again.',
+              'Upload Failed',
+              'Image upload failed. Please try again.',
               backgroundColor: Colors.red,
               colorText: Colors.white,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 3),
             );
           }
         } catch (uploadError) {
           _forceCloseAllDialogs();
+
+          String errorMessage = 'Upload failed. Please try again.';
+          if (uploadError.toString().contains('timeout')) {
+            errorMessage =
+                'Upload timeout. Please check your internet connection.';
+          } else if (uploadError.toString().contains('cancelled')) {
+            errorMessage = 'Upload was cancelled.';
+            return; // Don't show error for user-cancelled operations
+          } else if (uploadError.toString().contains('object-not-found')) {
+            errorMessage = 'Upload failed. Please try again.';
+          }
+
           Get.snackbar(
             'Error',
-            'Upload failed: ${uploadError.toString()}',
+            errorMessage,
             backgroundColor: Colors.red,
             colorText: Colors.white,
             duration: const Duration(seconds: 3),
@@ -278,6 +340,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         duration: const Duration(seconds: 2),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    // Cancel any ongoing storage operations when screen is disposed
+    super.dispose();
   }
 
   Future<void> _removeProfilePhoto(ProfileModel profile) async {
@@ -319,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (profile.photoUrl != null &&
             (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
                 profile.photoUrl!.contains('storage.googleapis.com'))) {
-          await storageService.deleteProfileImage(profile.photoUrl!);
+          await storageService.deleteProfileImageByPath(profile.photoUrl!);
         }
 
         // Update profile
@@ -391,6 +459,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               final url = urlController.text.trim();
               if (url.isNotEmpty) {
+                if (!_isValidImageUrl(url)) {
+                  Get.snackbar(
+                    'Error',
+                    'Please enter a valid image URL',
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                  return;
+                }
+
                 final updated = profile.copyWith(
                   photoUrl: url,
                   updatedAt: DateTime.now(),
@@ -491,27 +569,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child:
                                   profile.photoUrl != null &&
                                       profile.photoUrl!.isNotEmpty
-                                  ? Image.network(
-                                      profile.photoUrl!,
+                                  ? CachedNetworkImage(
+                                      imageUrl: profile.photoUrl!,
                                       width: 94,
                                       height: 94,
                                       fit: BoxFit.cover,
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Container(
-                                              color: Colors.grey[100],
-                                              child: const Center(
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      color: Color(0xFF667eea),
-                                                      strokeWidth: 2,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                      errorBuilder: (context, error, stackTrace) {
+                                      placeholder: (context, url) => Container(
+                                        color: Colors.grey[100],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Color(0xFF667eea),
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) {
                                         print(
                                           'Error loading image in edit dialog: $error',
                                         );
@@ -694,6 +766,240 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF667eea).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF667eea), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          _buildActionButton(
+            icon: Icons.settings,
+            title: 'Settings',
+            subtitle: 'App preferences and configurations',
+            onTap: () {
+              // Navigate to settings
+              Get.snackbar(
+                'Info',
+                'Settings screen will be implemented',
+                backgroundColor: Colors.blue,
+                colorText: Colors.white,
+              );
+            },
+          ),
+          const Divider(height: 32),
+          _buildActionButton(
+            icon: Icons.help_outline,
+            title: 'Help & Support',
+            subtitle: 'Get help and contact support',
+            onTap: () {
+              // Navigate to help
+              Get.snackbar(
+                'Info',
+                'Help & Support screen will be implemented',
+                backgroundColor: Colors.blue,
+                colorText: Colors.white,
+              );
+            },
+          ),
+          const Divider(height: 32),
+          _buildActionButton(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            subtitle: 'Read our privacy policy',
+            onTap: () {
+              // Navigate to privacy policy
+              Get.snackbar(
+                'Info',
+                'Privacy Policy screen will be implemented',
+                backgroundColor: Colors.blue,
+                colorText: Colors.white,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF667eea), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignOutButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.red[200]!),
+      ),
+      child: TextButton.icon(
+        onPressed: () async {
+          final bool? confirm = await Get.dialog<bool>(
+            AlertDialog(
+              title: const Text('Sign Out'),
+              content: const Text('Are you sure you want to sign out?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Get.back(result: false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Get.back(result: true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('Sign Out'),
+                ),
+              ],
+            ),
+          );
+
+          if (confirm == true) {
+            try {
+              await authService.signOut();
+              Get.offAll(() => LoginScreen());
+            } catch (e) {
+              Get.snackbar(
+                'Error',
+                'Failed to sign out: $e',
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+            }
+          }
+        },
+        icon: const Icon(Icons.logout, color: Colors.red),
+        label: const Text(
+          'Sign Out',
+          style: TextStyle(
+            color: Colors.red,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -728,7 +1034,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Refresh button
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
@@ -747,7 +1053,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (profile == null) return const SizedBox();
                           return Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
@@ -763,7 +1069,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -844,50 +1149,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     }
 
+                    // Main profile content
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          // Profile Picture Section with Enhanced Error Handling
-                          GestureDetector(
-                            onTap: () => _showPhotoOptions(profile),
-                            child: Stack(
+                          // Profile Header
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(30),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Column(
                               children: [
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xFF667eea),
-                                      width: 4,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
+                                // Profile Image
+                                GestureDetector(
+                                  onTap: () => _showPhotoOptions(profile),
+                                  child: Container(
+                                    width: 120,
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFF667eea),
+                                        width: 4,
                                       ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child:
-                                        profile.photoUrl != null &&
-                                            profile.photoUrl!.isNotEmpty
-                                        ? Image.network(
-                                            profile.photoUrl!,
-                                            width: 112,
-                                            height: 112,
-                                            fit: BoxFit.cover,
-                                            loadingBuilder:
-                                                (
-                                                  context,
-                                                  child,
-                                                  loadingProgress,
-                                                ) {
-                                                  if (loadingProgress == null)
-                                                    return child;
-                                                  return Container(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipOval(
+                                      child:
+                                          profile.photoUrl != null &&
+                                              profile.photoUrl!.isNotEmpty
+                                          ? CachedNetworkImage(
+                                              imageUrl: profile.photoUrl!,
+                                              width: 112,
+                                              height: 112,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) =>
+                                                  Container(
                                                     color: Colors.grey[100],
                                                     child: const Center(
                                                       child:
@@ -898,160 +1212,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             strokeWidth: 2,
                                                           ),
                                                     ),
-                                                  );
-                                                },
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                                  print(
-                                                    'Error loading main profile image: $error',
-                                                  );
-                                                  return Container(
-                                                    color: Colors.grey[100],
-                                                    child: const Icon(
-                                                      Icons.person,
-                                                      size: 60,
-                                                      color: Color(0xFF667eea),
-                                                    ),
-                                                  );
-                                                },
-                                          )
-                                        : Container(
-                                            color: Colors.grey[100],
-                                            child: const Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: Color(0xFF667eea),
+                                                  ),
+                                              errorWidget: (context, url, error) {
+                                                print(
+                                                  'Error loading profile image: $error',
+                                                );
+                                                return Container(
+                                                  color: Colors.grey[100],
+                                                  child: const Icon(
+                                                    Icons.person,
+                                                    size: 60,
+                                                    color: Color(0xFF667eea),
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          : Container(
+                                              color: Colors.grey[100],
+                                              child: const Icon(
+                                                Icons.person,
+                                                size: 60,
+                                                color: Color(0xFF667eea),
+                                              ),
                                             ),
-                                          ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF667eea),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black26,
-                                          blurRadius: 5,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 18,
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 20),
+                                // Name
+                                Text(
+                                  profile.name,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF2D3748),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                // Email
+                                Text(
+                                  profile.email,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (profile.bio != null &&
+                                    profile.bio!.isNotEmpty) ...[
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    profile.bio!,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      height: 1.5,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
 
-                          // Profile Info
-                          Text(
-                            profile.name,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF2D3748),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            profile.email,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 20),
 
-                          // Info Cards
+                          // Profile Information Cards
                           if (profile.phone != null &&
                               profile.phone!.isNotEmpty)
                             _buildInfoCard(
                               icon: Icons.phone,
-                              title: 'Phone',
+                              title: 'Phone Number',
                               value: profile.phone!,
                             ),
 
-                          if (profile.bio != null && profile.bio!.isNotEmpty)
-                            _buildInfoCard(
-                              icon: Icons.info,
-                              title: 'Bio',
-                              value: profile.bio!,
-                            ),
-
-                          // Debug info card (remove in production)
                           _buildInfoCard(
-                            icon: Icons.image,
-                            title: 'Photo URL',
-                            value: profile.photoUrl ?? 'No photo URL',
+                            icon: Icons.calendar_today,
+                            title: 'Member Since',
+                            value: _formatDate(profile.createdAt),
                           ),
 
-                          const SizedBox(height: 32),
+                          _buildInfoCard(
+                            icon: Icons.update,
+                            title: 'Last Updated',
+                            value: _formatDate(profile.updatedAt),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Action Buttons
+                          _buildActionButtons(),
+
+                          const SizedBox(height: 20),
 
                           // Sign Out Button
-                          Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF667eea,
-                                  ).withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                await authService.signOut();
-                                Get.offAll(() => LoginScreen());
-                              },
-                              icon: const Icon(
-                                Icons.logout,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Sign Out',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
+                          _buildSignOutButton(),
 
-                          // Footer
-                          Text(
-                            'Event Management • User Profile',
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 14,
-                            ),
-                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     );
@@ -1065,57 +1323,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF667eea).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF667eea), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF2D3748),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  String _formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
 }

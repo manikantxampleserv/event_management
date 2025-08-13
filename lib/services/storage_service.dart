@@ -1,314 +1,354 @@
 import 'dart:io';
-import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as path;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:get/get.dart';
 
-class StorageService {
-  final FirebaseFirestore _firestore;
+class StorageService extends GetxService {
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  StorageService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  // Track active upload tasks
+  UploadTask? _currentUploadTask;
+  final List<UploadTask> _activeTasks = [];
 
+  /// Uploads a profile image and returns the download URL
   Future<String?> uploadProfileImage(String userId, File imageFile) async {
-    if (userId.isEmpty) {
-      if (kDebugMode) {
-        print('StorageService: User ID is empty. Cannot upload profile image.');
-      }
+    if (!imageFile.existsSync()) {
+      print('❌ Image file does not exist: ${imageFile.path}');
       return null;
     }
 
     try {
-      if (!await imageFile.exists()) {
-        if (kDebugMode) {
-          print('StorageService: Image file does not exist: ${imageFile.path}');
-        }
-        return null;
-      }
-    } catch (e, st) {
-      if (kDebugMode) {
-        print('StorageService: Error checking file existence: $e');
-        print('StorageService: Stacktrace for file existence check: $st');
-      }
+      print('StorageService: Starting upload for user: $userId');
+
+      await _cancelCurrentUpload();
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = 'profile_images/${userId}_$timestamp.jpg';
+      final storageRef = _storage.ref().child(filePath);
+
+      final metadata = SettableMetadata(contentType: 'image/jpeg');
+
+      _currentUploadTask = storageRef.putFile(imageFile, metadata);
+
+      _currentUploadTask!.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        print('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
+      });
+
+      final snapshot = await _currentUploadTask!;
+      _currentUploadTask = null;
+
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      print('✅ Upload successful: $downloadUrl');
+      return downloadUrl;
+    } on FirebaseException catch (e) {
+      print('❌ Firebase error: ${e.code} - ${e.message}');
       return null;
-    }
-
-    try {
-      final Uint8List imageBytes = await imageFile.readAsBytes();
-
-      if (imageBytes.lengthInBytes > 1048576) {
-        if (kDebugMode) {
-          print(
-            'StorageService: Image file too large (${imageBytes.lengthInBytes} bytes). Max size is 1MB.',
-          );
-        }
-        return null;
-      }
-
-      final String base64Image = base64Encode(imageBytes);
-      final String fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${path.basenameWithoutExtension(imageFile.path)}';
-
-      final String contentType = _inferContentTypeFromPath(imageFile.path);
-
-      if (kDebugMode) {
-        print(
-          'StorageService: Storing image for user: $userId, size: ${imageBytes.lengthInBytes} bytes',
-        );
-      }
-
-      final Map<String, dynamic> imageData = {
-        'userId': userId,
-        'fileName': fileName,
-        'contentType': contentType,
-        'imageData': base64Image,
-        'uploadedAt': FieldValue.serverTimestamp(),
-        'fileSize': imageBytes.lengthInBytes,
-        'originalPath': imageFile.path,
-      };
-
-      final DocumentReference docRef = await _firestore
-          .collection('profile_images')
-          .add(imageData);
-
-      final String documentId = docRef.id;
-
-      if (kDebugMode) {
-        print('StorageService: Upload successful. Document ID: $documentId');
-      }
-
-      return documentId;
-    } on FirebaseException catch (e, st) {
-      if (kDebugMode) {
-        print(
-          'StorageService: FirebaseException during upload: ${e.code} ${e.message}',
-        );
-        print('StorageService: FirebaseException stacktrace: $st');
-      }
-
-      switch (e.code) {
-        case 'permission-denied':
-          if (kDebugMode) {
-            print('StorageService: Permission denied. Check Firestore rules.');
-          }
-          break;
-        case 'unavailable':
-          if (kDebugMode) print('StorageService: Service unavailable.');
-          break;
-        case 'resource-exhausted':
-          if (kDebugMode) print('StorageService: Quota exceeded.');
-          break;
-        default:
-          if (kDebugMode) {
-            print('StorageService: Unhandled Firestore error: ${e.code}');
-          }
-      }
-      return null;
-    } catch (e, st) {
-      if (kDebugMode) {
-        print('StorageService: Generic error uploading image: $e');
-        print('StorageService: Generic error stacktrace: $st');
-      }
+    } catch (e) {
+      print('❌ General error: $e');
       return null;
     }
   }
 
-  Future<Uint8List?> getImageData(String documentId) async {
-    if (documentId.isEmpty) {
-      if (kDebugMode) {
-        print('StorageService: Document ID is empty.');
-      }
-      return null;
-    }
-
+  /// Retrieves the download URL for a stored image using its path
+  Future<String?> getProfileImageUrl(String filePath) async {
     try {
-      final DocumentSnapshot doc = await _firestore
-          .collection('profile_images')
-          .doc(documentId)
-          .get();
-
-      if (!doc.exists) {
-        if (kDebugMode) {
-          print('StorageService: Document not found: $documentId');
-        }
+      if (filePath.isEmpty) {
+        print('StorageService: Empty file path provided');
         return null;
       }
 
-      final Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-      if (data == null || !data.containsKey('imageData')) {
-        if (kDebugMode) {
-          print('StorageService: No image data found in document: $documentId');
+      final ref = _storage.ref().child(filePath);
+
+      // Check if file exists first
+      try {
+        await ref.getMetadata();
+      } on FirebaseException catch (e) {
+        if (e.code == 'object-not-found') {
+          print('StorageService: File does not exist at path: $filePath');
+          return null;
         }
-        return null;
       }
 
-      final String base64Image = data['imageData'] as String;
-      return base64Decode(base64Image);
-    } on FirebaseException catch (e, st) {
-      if (kDebugMode) {
-        print(
-          'StorageService: FirebaseException retrieving image $documentId: ${e.code} ${e.message}',
-        );
-        print('StorageService: FirebaseException stacktrace: $st');
+      final downloadUrl = await ref.getDownloadURL();
+      print('StorageService: Successfully retrieved URL for: $filePath');
+      return downloadUrl;
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        print('StorageService: File does not exist');
+        return null;
       }
+      print(
+        'StorageService: Error fetching image URL: ${e.code} - ${e.message}',
+      );
       return null;
-    } catch (e, st) {
-      if (kDebugMode) {
-        print('StorageService: Generic error retrieving image $documentId: $e');
-        print('StorageService: Generic error stacktrace: $st');
-      }
+    } catch (e) {
+      print('StorageService: General error fetching URL: $e');
       return null;
     }
   }
 
-  // Method to get image metadata
-  Future<Map<String, dynamic>?> getImageMetadata(String documentId) async {
-    if (documentId.isEmpty) {
-      if (kDebugMode) {
-        print('StorageService: Document ID is empty.');
-      }
-      return null;
-    }
-
+  /// Deletes a profile image using its download URL or file path
+  Future<bool> deleteProfileImageByPath(String urlOrPath) async {
     try {
-      final DocumentSnapshot doc = await _firestore
-          .collection('profile_images')
-          .doc(documentId)
-          .get();
+      if (urlOrPath.isEmpty) {
+        print('StorageService: Empty URL or path provided for deletion');
+        return false;
+      }
 
-      if (!doc.exists) {
-        if (kDebugMode) {
-          print('StorageService: Document not found: $documentId');
+      Reference ref;
+
+      // Check if it's a download URL or a file path
+      if (urlOrPath.startsWith('http')) {
+        // It's a download URL, extract the path
+        try {
+          ref = _storage.refFromURL(urlOrPath);
+        } catch (e) {
+          print('StorageService: Invalid URL format: $urlOrPath');
+          return false;
         }
-        return null;
+      } else {
+        // It's a file path
+        ref = _storage.ref().child(urlOrPath);
       }
 
-      final Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-      if (data == null) return null;
+      print('StorageService: Attempting to delete: ${ref.fullPath}');
 
-      // Return metadata without the actual image data
-      return {
-        'userId': data['userId'],
-        'fileName': data['fileName'],
-        'contentType': data['contentType'],
-        'uploadedAt': data['uploadedAt'],
-        'fileSize': data['fileSize'],
-        'originalPath': data['originalPath'],
-      };
-    } catch (e, st) {
-      if (kDebugMode) {
-        print('StorageService: Error retrieving metadata $documentId: $e');
-        print('StorageService: Stacktrace: $st');
+      // Check if file exists before attempting deletion
+      try {
+        await ref.getMetadata();
+      } on FirebaseException catch (e) {
+        if (e.code == 'object-not-found') {
+          print('StorageService: File already deleted or does not exist');
+          return true; // Consider success since the goal is achieved
+        }
       }
-      return null;
-    }
-  }
 
-  Future<bool> deleteProfileImage(String? documentId) async {
-    if (documentId == null || documentId.isEmpty) {
-      if (kDebugMode) {
+      // Perform deletion with timeout
+      await ref.delete().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          print('StorageService: Delete operation timeout');
+          throw Exception('Delete timeout after 30 seconds');
+        },
+      );
+
+      print('StorageService: Image deleted successfully');
+      return true;
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        print('StorageService: File already deleted or does not exist');
+        return true; // Consider success since the goal is achieved
+      } else {
         print(
-          'StorageService: Document ID is null or empty. Nothing to delete.',
+          'StorageService: Firebase delete error: ${e.code} - ${e.message}',
         );
+        return false;
       }
+    } catch (e) {
+      print('StorageService: General delete error: $e');
       return false;
     }
+  }
 
-    if (kDebugMode) {
-      print('StorageService: Deleting image document: $documentId');
+  /// Deletes multiple profile images
+  Future<Map<String, bool>> deleteMultipleImages(
+    List<String> urlsOrPaths,
+  ) async {
+    final results = <String, bool>{};
+
+    for (final urlOrPath in urlsOrPaths) {
+      try {
+        final success = await deleteProfileImageByPath(urlOrPath);
+        results[urlOrPath] = success;
+      } catch (e) {
+        print('StorageService: Error deleting $urlOrPath: $e');
+        results[urlOrPath] = false;
+      }
     }
 
+    return results;
+  }
+
+  /// Cancels the current upload task
+  Future<void> _cancelCurrentUpload() async {
+    if (_currentUploadTask != null) {
+      print('StorageService: Cancelling current upload');
+      try {
+        await _currentUploadTask!.cancel();
+      } catch (e) {
+        print('StorageService: Error cancelling upload: $e');
+      }
+      _activeTasks.remove(_currentUploadTask);
+      _currentUploadTask = null;
+    }
+  }
+
+  /// Cancels all active operations
+  Future<void> cancelAllOperations() async {
+    print('StorageService: Cancelling all active operations');
+
+    // Cancel current upload
+    await _cancelCurrentUpload();
+
+    // Cancel all other active tasks
+    for (final task in List<UploadTask>.from(_activeTasks)) {
+      try {
+        await task.cancel();
+      } catch (e) {
+        print('StorageService: Error cancelling task: $e');
+      }
+    }
+
+    _activeTasks.clear();
+    print('StorageService: All operations cancelled');
+  }
+
+  /// Cleanup failed upload references
+  void cleanupFailedUpload() {
+    if (_currentUploadTask != null) {
+      _activeTasks.remove(_currentUploadTask);
+      _currentUploadTask = null;
+    }
+  }
+
+  /// Validates image file
+  bool isValidImageFile(File file) {
     try {
-      await _firestore.collection('profile_images').doc(documentId).delete();
+      final extension = _getFileExtension(file.path).toLowerCase();
+      const validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      return validExtensions.contains(extension);
+    } catch (e) {
+      print('StorageService: Error validating file: $e');
+      return false;
+    }
+  }
 
-      if (kDebugMode) {
-        print(
-          'StorageService: Image document deleted successfully: $documentId',
-        );
-      }
-      return true;
-    } on FirebaseException catch (e, st) {
-      if (kDebugMode) {
-        print(
-          'StorageService: FirebaseException deleting document $documentId: ${e.code} ${e.message}',
-        );
-        print('StorageService: FirebaseException stacktrace: $st');
-      }
+  /// Checks if URL is a valid image URL
+  bool isValidImageUrl(String? url) {
+    if (url == null || url.isEmpty) return false;
 
-      if (e.code == 'not-found') {
-        if (kDebugMode) {
-          print(
-            'StorageService: Document not found (already deleted): $documentId',
-          );
+    try {
+      final uri = Uri.parse(url);
+      return uri.hasAbsolutePath &&
+          (uri.scheme == 'http' || uri.scheme == 'https');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Gets file extension from path
+  String _getFileExtension(String path) {
+    final lastDot = path.lastIndexOf('.');
+    if (lastDot == -1) return 'jpg'; // Default to jpg
+    return path.substring(lastDot + 1).toLowerCase();
+  }
+
+  /// Gets content type based on file extension
+  String getContentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
+  }
+
+  /// Gets storage usage statistics
+  Future<Map<String, dynamic>> getStorageStats(String userId) async {
+    try {
+      final userFolderRef = _storage.ref().child('profile_images/$userId');
+      final listResult = await userFolderRef.listAll();
+
+      int totalFiles = listResult.items.length;
+      int totalSize = 0;
+
+      for (final item in listResult.items) {
+        try {
+          final metadata = await item.getMetadata();
+          totalSize += metadata.size ?? 0;
+        } catch (e) {
+          print('StorageService: Error getting metadata for ${item.name}: $e');
         }
+      }
+
+      return {
+        'totalFiles': totalFiles,
+        'totalSizeBytes': totalSize,
+        'totalSizeMB': (totalSize / (1024 * 1024)).toStringAsFixed(2),
+      };
+    } catch (e) {
+      print('StorageService: Error getting storage stats: $e');
+      return {'totalFiles': 0, 'totalSizeBytes': 0, 'totalSizeMB': '0.00'};
+    }
+  }
+
+  /// Cleanup old profile images for a user (keeps only the latest N images)
+  Future<bool> cleanupOldImages(String userId, {int keepLatest = 5}) async {
+    try {
+      final userFolderRef = _storage.ref().child('profile_images/$userId');
+      final listResult = await userFolderRef.listAll();
+
+      if (listResult.items.length <= keepLatest) {
+        print(
+          'StorageService: No cleanup needed. Current files: ${listResult.items.length}',
+        );
         return true;
       }
-      return false;
-    } catch (e, st) {
-      if (kDebugMode) {
-        print(
-          'StorageService: Generic error deleting document $documentId: $e',
-        );
-        print('StorageService: Generic error stacktrace: $st');
+
+      // Sort by creation time (extract timestamp from filename)
+      final sortedItems = listResult.items.toList();
+      sortedItems.sort((a, b) {
+        final timestampA = _extractTimestampFromName(a.name);
+        final timestampB = _extractTimestampFromName(b.name);
+        return timestampB.compareTo(timestampA); // Newest first
+      });
+
+      // Delete old files
+      final itemsToDelete = sortedItems.skip(keepLatest).toList();
+      int deletedCount = 0;
+
+      for (final item in itemsToDelete) {
+        try {
+          await item.delete();
+          deletedCount++;
+          print('StorageService: Deleted old image: ${item.name}');
+        } catch (e) {
+          print('StorageService: Error deleting ${item.name}: $e');
+        }
       }
+
+      print(
+        'StorageService: Cleanup completed. Deleted $deletedCount old images',
+      );
+      return true;
+    } catch (e) {
+      print('StorageService: Error during cleanup: $e');
       return false;
     }
   }
 
-  Future<List<Map<String, dynamic>>> getUserProfileImages(String userId) async {
-    if (userId.isEmpty) {
-      if (kDebugMode) {
-        print('StorageService: User ID is empty.');
-      }
-      return [];
-    }
-
+  /// Extract timestamp from filename
+  int _extractTimestampFromName(String filename) {
     try {
-      final QuerySnapshot querySnapshot = await _firestore
-          .collection('profile_images')
-          .where('userId', isEqualTo: userId)
-          .orderBy('uploadedAt', descending: true)
-          .get();
-
-      return querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return {
-          'documentId': doc.id,
-          'userId': data['userId'],
-          'fileName': data['fileName'],
-          'contentType': data['contentType'],
-          'uploadedAt': data['uploadedAt'],
-          'fileSize': data['fileSize'],
-          'originalPath': data['originalPath'],
-        };
-      }).toList();
-    } catch (e, st) {
-      if (kDebugMode) {
-        print('StorageService: Error getting user images for $userId: $e');
-        print('StorageService: Stacktrace: $st');
+      final parts = filename.split('_');
+      if (parts.length >= 2) {
+        final timestampPart = parts[1].split('.')[0];
+        return int.parse(timestampPart);
       }
-      return [];
+    } catch (e) {
+      print('StorageService: Error extracting timestamp from $filename: $e');
     }
+    return 0;
   }
 
-  // Helpers
-  String _inferContentTypeFromPath(String filePath) {
-    final ext = path.extension(filePath).toLowerCase();
-    switch (ext) {
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.png':
-        return 'image/png';
-      case '.gif':
-        return 'image/gif';
-      case '.webp':
-        return 'image/webp';
-      case '.heic':
-      case '.heif':
-        return 'image/heif'; // Common on Apple devices
-      default:
-        return 'application/octet-stream';
-    }
+  @override
+  void onClose() {
+    cancelAllOperations();
+    super.onClose();
   }
 }
