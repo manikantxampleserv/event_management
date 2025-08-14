@@ -1,11 +1,9 @@
 // ignore_for_file: deprecated_member_use
-
 import 'dart:async';
-import 'package:event_management/helpers/firebase_helpers.dart';
+import 'package:event_management/helpers/cached_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
 import '../models/event_model.dart';
 import '../services/auth_service.dart';
 import '../services/event_service.dart';
@@ -26,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProfileService profileService = Get.put(ProfileService());
   final TextEditingController _searchController = TextEditingController();
   final PageController _carouselController = PageController();
-  bool _sampleEventsAdded = false; // Flag to track if sample events were added
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
 
@@ -39,9 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       profileService.fetchProfile(userId);
     }
 
-    // Only add sample events once and if the list is truly empty
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _addSampleEventsIfNeeded();
       _startAutoSlide();
     });
   }
@@ -72,159 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _carouselTimer = null;
   }
 
-  void _addSampleEventsIfNeeded() {
-    // Check if events list is empty AND we haven't added sample events yet
-    if (eventService.events.isEmpty && !_sampleEventsAdded) {
-      _addSampleEvents();
-      _sampleEventsAdded = true;
-    }
-  }
-
-  void _addSampleEvents() {
-    final List<EventModel> sampleEvents = [
-      EventModel(
-        title: 'Tech Conference 2024',
-        description:
-            'Join us for the biggest tech conference of the year featuring industry leaders and innovative technologies.',
-        category: 'Technology',
-        imageUrl:
-            'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500',
-        date: DateTime.now().add(const Duration(days: 7)),
-        time: '09:00 AM',
-        venue: 'Convention Center',
-        price: 299.99,
-        availableSeats: 150,
-        organizer: 'Tech Events Inc',
-        tags: ['Technology', 'Conference', 'Innovation'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Music Festival',
-        description:
-            'Experience the best live music performances from top artists around the world.',
-        category: 'Music',
-        imageUrl:
-            'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500',
-        date: DateTime.now().add(const Duration(days: 14)),
-        time: '06:00 PM',
-        venue: 'Central Park',
-        price: 89.99,
-        availableSeats: 500,
-        organizer: 'Music Productions',
-        tags: ['Music', 'Festival', 'Live Performance'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Business Networking',
-        description:
-            'Connect with industry professionals and expand your business network.',
-        category: 'Business',
-        imageUrl:
-            'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500',
-        date: DateTime.now().add(const Duration(days: 3)),
-        time: '07:00 PM',
-        venue: 'Grand Hotel',
-        price: 149.99,
-        availableSeats: 80,
-        organizer: 'Business Network',
-        tags: ['Business', 'Networking', 'Professional'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Art Exhibition',
-        description:
-            'Discover amazing artworks from contemporary artists in this exclusive exhibition.',
-        category: 'Art',
-        imageUrl:
-            'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=500',
-        date: DateTime.now().add(const Duration(days: 10)),
-        time: '10:00 AM',
-        venue: 'Modern Art Gallery',
-        price: 25.00,
-        availableSeats: 200,
-        organizer: 'Art Gallery',
-        tags: ['Art', 'Exhibition', 'Culture'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Startup Pitch Night',
-        description:
-            'Watch startups pitch their ideas to investors and network with entrepreneurs.',
-        category: 'Business',
-        imageUrl:
-            'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500',
-        date: DateTime.now().add(const Duration(days: 5)),
-        time: '05:30 PM',
-        venue: 'Innovation Hub',
-        price: 0.0,
-        availableSeats: 100,
-        organizer: 'Startup Community',
-        tags: ['Business', 'Startup', 'Pitch'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Food Carnival',
-        description:
-            'Taste delicious cuisines from around the world at our annual food carnival.',
-        category: 'Food',
-        imageUrl:
-            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500',
-        date: DateTime.now().add(const Duration(days: 12)),
-        time: '12:00 PM',
-        venue: 'City Square',
-        price: 15.00,
-        availableSeats: 300,
-        organizer: 'Foodies United',
-        tags: ['Food', 'Carnival', 'Cuisine'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Yoga & Wellness Retreat',
-        description:
-            'Relax and rejuvenate with yoga sessions and wellness workshops.',
-        category: 'Health',
-        imageUrl:
-            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500',
-        date: DateTime.now().add(const Duration(days: 20)),
-        time: '08:00 AM',
-        venue: 'Mountain Resort',
-        price: 120.00,
-        availableSeats: 50,
-        organizer: 'Wellness Center',
-        tags: ['Health', 'Yoga', 'Wellness'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      EventModel(
-        title: 'Photography Workshop',
-        description:
-            'Learn photography from professionals and improve your skills.',
-        category: 'Education',
-        imageUrl:
-            'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=500',
-        date: DateTime.now().add(const Duration(days: 8)),
-        time: '02:00 PM',
-        venue: 'Art Studio',
-        price: 60.00,
-        availableSeats: 30,
-        organizer: 'Photo Academy',
-        tags: ['Education', 'Photography', 'Workshop'],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ];
-
-    for (var event in sampleEvents) {
-      eventService.createEvent(event);
-    }
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -247,15 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header
               _buildHeader(),
-
-              // Search Bar
               _buildSearchBar(),
-
               const SizedBox(height: 20),
-
-              // Main Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -289,78 +125,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader() {
     final authService = Get.find<AuthService>();
-    return Obx(() {
-      final profile = profileService.profile.value;
-      final email = authService.getCurrentUserEmail();
-      final String firstLetter = (email != null && email.isNotEmpty)
-          ? email[0].toUpperCase()
-          : '?';
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Event Booking',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Event Booking',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  Text(
-                    'Discover Amazing Events',
-                    style: const TextStyle(fontSize: 14, color: Colors.white70),
-                  ),
-                ],
-              ),
+                ),
+                Text(
+                  'Discover Amazing Events',
+                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+              ],
             ),
-            GestureDetector(
-              onTap: () => Get.to(() => const ProfileScreen()),
-              child: Container(
+          ),
+          GestureDetector(
+            onTap: () => Get.to(() => const ProfileScreen()),
+            child: Obx(() {
+              final profile = profileService.profile.value;
+              final email = authService.getCurrentUserEmail();
+              final String firstLetter = (email != null && email.isNotEmpty)
+                  ? email[0].toUpperCase()
+                  : '?';
+
+              final String fallbackLetter = (profile?.name.isNotEmpty == true)
+                  ? profile!.name[0].toUpperCase()
+                  : firstLetter;
+
+              return CachedAvatarWidget(
+                photoUrl: profile?.photoUrl,
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color.fromARGB(255, 140, 158, 234),
-                ),
-                child: ClipOval(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        color: const Color(0xFF667eea),
-                        child: Center(
-                          child: Text(
-                            (profile?.name.isNotEmpty == true)
-                                ? profile!.name[0].toUpperCase()
-                                : firstLetter,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      buildProfileImage(
-                        profile?.photoUrl,
-                        width: 50,
-                        height: 50,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+                fallbackLetter: fallbackLetter,
+              );
+            }),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSearchBar() {

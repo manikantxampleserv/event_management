@@ -465,7 +465,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   '₹${widget.event.price.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
+                                    fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -531,7 +531,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           ),
                           const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
@@ -555,7 +555,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   '₹${(widget.event.price * selectedQuantity).toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 28,
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

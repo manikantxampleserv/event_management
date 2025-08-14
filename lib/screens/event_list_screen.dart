@@ -1,5 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
+import 'package:event_management/screens/manage_event.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -17,7 +16,7 @@ class EventListScreen extends StatefulWidget {
 class _EventListScreenState extends State<EventListScreen> {
   final EventService eventService = Get.find<EventService>();
   final TextEditingController _searchController = TextEditingController();
-  bool _isGridView = false; // Added state for view toggle
+  bool _isGridView = false;
 
   @override
   void dispose() {
@@ -25,20 +24,11 @@ class _EventListScreenState extends State<EventListScreen> {
     super.dispose();
   }
 
-  void _showAddEventDialog() {
+  void _showEventFormDialog({EventModel? event}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return _AddEventDialog();
-      },
-    );
-  }
-
-  void _showEditEventDialog(EventModel event) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return _EditEventDialog(event: event);
+        return EventFormDialog(event: event);
       },
     );
   }
@@ -88,7 +78,6 @@ class _EventListScreenState extends State<EventListScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // View toggle button
           IconButton(
             onPressed: () {
               setState(() {
@@ -99,7 +88,7 @@ class _EventListScreenState extends State<EventListScreen> {
             tooltip: _isGridView ? 'List View' : 'Grid View',
           ),
           IconButton(
-            onPressed: _showAddEventDialog,
+            onPressed: () => _showEventFormDialog(),
             icon: const Icon(Icons.add),
             tooltip: 'Add Event',
           ),
@@ -125,7 +114,7 @@ class _EventListScreenState extends State<EventListScreen> {
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -191,7 +180,6 @@ class _EventListScreenState extends State<EventListScreen> {
                       );
                     }
 
-                    // Render based on view type
                     if (_isGridView) {
                       return _buildGridView();
                     } else {
@@ -225,7 +213,7 @@ class _EventListScreenState extends State<EventListScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.75, // Adjusted for better height
+        childAspectRatio: 0.75,
       ),
       itemCount: eventService.filteredEvents.length,
       itemBuilder: (context, index) {
@@ -243,7 +231,7 @@ class _EventListScreenState extends State<EventListScreen> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -251,7 +239,6 @@ class _EventListScreenState extends State<EventListScreen> {
       ),
       child: Column(
         children: [
-          // Event Image
           Container(
             height: 200,
             width: double.infinity,
@@ -274,7 +261,10 @@ class _EventListScreenState extends State<EventListScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
               child: Padding(
@@ -307,7 +297,8 @@ class _EventListScreenState extends State<EventListScreen> {
                         Row(
                           children: [
                             IconButton(
-                              onPressed: () => _showEditEventDialog(event),
+                              onPressed: () =>
+                                  _showEventFormDialog(event: event),
                               icon: const Icon(
                                 Icons.edit,
                                 color: Colors.white,
@@ -332,7 +323,6 @@ class _EventListScreenState extends State<EventListScreen> {
             ),
           ),
 
-          // Event Details
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -445,7 +435,7 @@ class _EventListScreenState extends State<EventListScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -454,7 +444,6 @@ class _EventListScreenState extends State<EventListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Event Image
           Expanded(
             flex: 3,
             child: Container(
@@ -477,7 +466,10 @@ class _EventListScreenState extends State<EventListScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.6),
+                    ],
                   ),
                 ),
                 child: Stack(
@@ -504,7 +496,6 @@ class _EventListScreenState extends State<EventListScreen> {
                         ),
                       ),
                     ),
-                    // Action buttons
                     Positioned(
                       top: 2,
                       right: 2,
@@ -513,11 +504,12 @@ class _EventListScreenState extends State<EventListScreen> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: IconButton(
-                              onPressed: () => _showEditEventDialog(event),
+                              onPressed: () =>
+                                  _showEventFormDialog(event: event),
                               icon: const Icon(
                                 Icons.edit,
                                 color: Colors.white,
@@ -533,7 +525,7 @@ class _EventListScreenState extends State<EventListScreen> {
                           const SizedBox(width: 2),
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: IconButton(
@@ -559,7 +551,6 @@ class _EventListScreenState extends State<EventListScreen> {
             ),
           ),
 
-          // Event Details
           Expanded(
             flex: 2,
             child: Padding(
@@ -568,7 +559,6 @@ class _EventListScreenState extends State<EventListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Title and basic info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,7 +618,6 @@ class _EventListScreenState extends State<EventListScreen> {
                       ],
                     ),
                   ),
-                  // Price and button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -673,634 +662,6 @@ class _EventListScreenState extends State<EventListScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AddEventDialog extends StatefulWidget {
-  @override
-  State<_AddEventDialog> createState() => _AddEventDialogState();
-}
-
-class _AddEventDialogState extends State<_AddEventDialog> {
-  final EventService eventService = Get.find<EventService>();
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _venueController = TextEditingController();
-  final _timeController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _seatsController = TextEditingController();
-  final _organizerController = TextEditingController();
-
-  String _selectedCategory = 'Technology';
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
-  final List<String> _selectedTags = [];
-
-  final List<String> _categories = [
-    'Technology',
-    'Music',
-    'Business',
-    'Art',
-    'Sports',
-    'Education',
-    'Health',
-    'Food',
-  ];
-
-  final List<String> _availableTags = [
-    'Technology',
-    'Conference',
-    'Innovation',
-    'Music',
-    'Festival',
-    'Live Performance',
-    'Business',
-    'Networking',
-    'Professional',
-    'Art',
-    'Exhibition',
-    'Culture',
-    'Sports',
-    'Fitness',
-    'Education',
-    'Workshop',
-    'Health',
-    'Wellness',
-    'Food',
-    'Cooking',
-  ];
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _venueController.dispose();
-    _timeController.dispose();
-    _priceController.dispose();
-    _seatsController.dispose();
-    _organizerController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  void _saveEvent() async {
-    if (_formKey.currentState!.validate()) {
-      final event = EventModel(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        category: _selectedCategory,
-        imageUrl:
-            'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500',
-        date: _selectedDate,
-        time: _timeController.text,
-        venue: _venueController.text,
-        price: double.parse(_priceController.text),
-        availableSeats: int.parse(_seatsController.text),
-        organizer: _organizerController.text,
-        tags: _selectedTags,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      bool success = await eventService.createEvent(event);
-      if (success) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to create event. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add New Event'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Event Title'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter event title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _venueController,
-                decoration: const InputDecoration(labelText: 'Venue'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter venue';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _timeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Time (e.g., 09:00 AM)',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter time';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Date'),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(_selectedDate),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(labelText: 'Price'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter price';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter valid price';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _seatsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Available Seats',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter seats';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Please enter valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _organizerController,
-                decoration: const InputDecoration(labelText: 'Organizer'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter organizer';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              const Text('Tags (Optional):'),
-              Wrap(
-                spacing: 8,
-                children: _availableTags.map((tag) {
-                  bool isSelected = _selectedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedTags.add(tag);
-                        } else {
-                          _selectedTags.remove(tag);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveEvent,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF667eea),
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Save'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EditEventDialog extends StatefulWidget {
-  final EventModel event;
-
-  const _EditEventDialog({required this.event});
-
-  @override
-  State<_EditEventDialog> createState() => _EditEventDialogState();
-}
-
-class _EditEventDialogState extends State<_EditEventDialog> {
-  final EventService eventService = Get.find<EventService>();
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleController;
-  late final TextEditingController _descriptionController;
-  late final TextEditingController _venueController;
-  late final TextEditingController _timeController;
-  late final TextEditingController _priceController;
-  late final TextEditingController _seatsController;
-  late final TextEditingController _organizerController;
-
-  late String _selectedCategory;
-  late DateTime _selectedDate;
-  late List<String> _selectedTags;
-
-  final List<String> _categories = [
-    'Technology',
-    'Music',
-    'Business',
-    'Art',
-    'Sports',
-    'Education',
-    'Health',
-    'Food',
-  ];
-
-  final List<String> _availableTags = [
-    'Technology',
-    'Conference',
-    'Innovation',
-    'Music',
-    'Festival',
-    'Live Performance',
-    'Business',
-    'Networking',
-    'Professional',
-    'Art',
-    'Exhibition',
-    'Culture',
-    'Sports',
-    'Fitness',
-    'Education',
-    'Workshop',
-    'Health',
-    'Wellness',
-    'Food',
-    'Cooking',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _titleController = TextEditingController(text: widget.event.title);
-    _descriptionController = TextEditingController(
-      text: widget.event.description,
-    );
-    _venueController = TextEditingController(text: widget.event.venue);
-    _timeController = TextEditingController(text: widget.event.time);
-    _priceController = TextEditingController(
-      text: widget.event.price.toString(),
-    );
-    _seatsController = TextEditingController(
-      text: widget.event.availableSeats.toString(),
-    );
-    _organizerController = TextEditingController(text: widget.event.organizer);
-    _selectedCategory = widget.event.category;
-    _selectedDate = widget.event.date;
-    _selectedTags = List.from(widget.event.tags);
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _venueController.dispose();
-    _timeController.dispose();
-    _priceController.dispose();
-    _seatsController.dispose();
-    _organizerController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  void _updateEvent() async {
-    if (_formKey.currentState!.validate()) {
-      final updatedEvent = widget.event.copyWith(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        category: _selectedCategory,
-        date: _selectedDate,
-        time: _timeController.text,
-        venue: _venueController.text,
-        price: double.parse(_priceController.text),
-        availableSeats: int.parse(_seatsController.text),
-        organizer: _organizerController.text,
-        tags: _selectedTags,
-        updatedAt: DateTime.now(),
-      );
-
-      bool success = await eventService.updateEvent(updatedEvent);
-      if (success) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update event. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Event'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Event Title'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter event title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _venueController,
-                decoration: const InputDecoration(labelText: 'Venue'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter venue';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _timeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Time (e.g., 09:00 AM)',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter time';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Date'),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(_selectedDate),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(labelText: 'Price'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter price';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter valid price';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _seatsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Available Seats',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter seats';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Please enter valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _organizerController,
-                decoration: const InputDecoration(labelText: 'Organizer'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter organizer';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              const Text('Tags:'),
-              Wrap(
-                spacing: 8,
-                children: _availableTags.map((tag) {
-                  bool isSelected = _selectedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedTags.add(tag);
-                        } else {
-                          _selectedTags.remove(tag);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _updateEvent,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF667eea),
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Update'),
-        ),
-      ],
     );
   }
 }

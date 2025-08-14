@@ -151,9 +151,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         width: MediaQuery.of(context).size.width / 4,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF667eea).withOpacity(0.1),
+          color: const Color(0xFF667eea).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF667eea).withOpacity(0.2)),
+          border: Border.all(
+            color: const Color(0xFF667eea).withValues(alpha: 0.2),
+          ),
         ),
         child: Column(
           children: [
@@ -348,8 +350,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (confirm == true) {
       Get.dialog(
-        WillPopScope(
-          onWillPop: () async => false,
+        PopScope(
+          onPopInvokedWithResult: (didPop, result) => Get.back(result: result),
           child: const Center(
             child: CircularProgressIndicator(color: Color(0xFF667eea)),
           ),
@@ -358,7 +360,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       try {
-        // Only delete from Firebase Storage if it's a Firebase Storage URL
         if (profile.photoUrl != null &&
             (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
                 profile.photoUrl!.contains('storage.googleapis.com'))) {
@@ -368,7 +369,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        // Update profile
         final updated = profile.copyWith(
           photoUrl: null,
           updatedAt: DateTime.now(),
@@ -453,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
                 await profileService.updateProfile(updated);
               }
-              Navigator.pop(context);
+              Get.back();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF667eea),
@@ -635,7 +635,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               setState(() => isUpdating = false);
 
                               if (success) {
-                                Navigator.pop(context);
+                                Get.back();
                               }
                             },
                       style: ElevatedButton.styleFrom(
