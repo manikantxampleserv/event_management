@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:event_management/authentication/login_screen.dart';
+import 'package:event_management/layout/main_layout.dart';
+import 'package:event_management/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:event_management/authentication/login_screen.dart';
-import 'package:event_management/screens/home_screen.dart';
-import 'package:event_management/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(seconds: 4), () {
       final authService = Get.find<AuthService>();
       if (authService.isLoggedIn) {
-        Get.offAll(() => const HomeScreen());
+        Get.offAll(() => const MainLayout());
       } else {
         Get.offAll(() => const LoginScreen());
       }

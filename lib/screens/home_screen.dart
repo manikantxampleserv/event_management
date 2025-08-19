@@ -24,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final EventService eventService = Get.put(EventService());
   final ProfileService profileService = Get.put(ProfileService());
   final TextEditingController _searchController = TextEditingController();
-  int selectedIndex = 0;
   final PageController _carouselController = PageController();
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
@@ -51,12 +50,6 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedIcon: Icons.settings,
     ),
   ];
-
-  void handleChange(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  }
 
   @override
   void initState() {
@@ -139,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 1),
                         _buildFeaturedEventsCarousel(),
                         _buildWelcomeMessage(),
+                        _buildUpcomingEventsSection(),
                         _buildPopularEventsSection(),
                         _buildRecentEventsSection(),
                         const SizedBox(height: 25),
@@ -150,11 +144,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomBar(
-        handleChange: handleChange,
-        selectedIndex: selectedIndex,
-        navItems: navItems,
       ),
     );
   }
@@ -505,6 +494,64 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Text(
                   'Popular Events',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    eventService.filterByCategory('');
+                    Get.to(() => EventListScreen());
+                  },
+                  child: const Text(
+                    'View All',
+                    style: TextStyle(
+                      color: Color(0xFF667eea),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 280,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: popularEvents.length,
+              itemBuilder: (context, index) {
+                return _buildHorizontalEventCard(popularEvents[index]);
+              },
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildUpcomingEventsSection() {
+    return Obx(() {
+      List<EventModel> popularEvents = eventService.events
+          .where((event) => event.availableSeats < 100 || event.price > 100)
+          .take(5)
+          .toList();
+
+      if (popularEvents.isEmpty) {
+        popularEvents = eventService.events.take(3).toList();
+      }
+
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Upcoming Events',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
