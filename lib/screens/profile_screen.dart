@@ -236,7 +236,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 profile.photoUrl!.isNotEmpty &&
                 (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
                     profile.photoUrl!.contains('storage.googleapis.com'))) {
-              // Try to delete old image, but don't let failure affect the process
               try {
                 await storageService.deleteFileFromFirestore(
                   collectionName: 'profile_images',
@@ -257,7 +256,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final success = await profileService.updateProfile(updated);
 
             if (success) {
+              // Force UI refresh
               setState(() {});
+              // Also refresh profile data to ensure consistency
+              await profileService.fetchProfile(userId);
+
               Get.snackbar(
                 'Success',
                 'Profile image updated successfully',
@@ -287,14 +290,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         } catch (uploadError) {
           _forceCloseAllDialogs();
-
           String errorMessage = 'Upload failed. Please try again.';
           if (uploadError.toString().contains('timeout')) {
             errorMessage =
                 'Upload timeout. Please check your internet connection.';
           } else if (uploadError.toString().contains('cancelled')) {
             errorMessage = 'Upload was cancelled.';
-            return; // Don't show error for user-cancelled operations
+            return;
           } else if (uploadError.toString().contains('object-not-found')) {
             errorMessage = 'Upload failed. Please try again.';
           }
@@ -360,15 +362,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       try {
+        final userId = authService.user?.uid;
+        if (userId == null) {
+          _forceCloseAllDialogs();
+          Get.snackbar(
+            'Error',
+            'User session expired',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
+
+        // Delete from Firebase Storage if it's a Firebase image
         if (profile.photoUrl != null &&
             (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
                 profile.photoUrl!.contains('storage.googleapis.com'))) {
           await storageService.deleteFileFromFirestore(
             collectionName: 'profile_images',
-            documentId: profile.id.toString(),
+            documentId: userId,
           );
         }
 
+        // Update profile with null photoUrl
         final updated = profile.copyWith(
           photoUrl: null,
           updatedAt: DateTime.now(),
@@ -379,6 +395,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _forceCloseAllDialogs();
 
         if (success) {
+          // Force UI refresh
+          setState(() {});
+          // Also refresh profile data to ensure consistency
+          await profileService.fetchProfile(userId);
+
           Get.snackbar(
             'Success',
             'Profile photo removed successfully',

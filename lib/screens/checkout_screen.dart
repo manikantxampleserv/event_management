@@ -1,9 +1,12 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:event_management/services/profile_service.dart';
+import 'package:event_management/services/orders_service.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+
 import '../models/event_model.dart';
 import '../services/event_service.dart';
 
@@ -23,6 +26,10 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final EventService eventService = Get.find<EventService>();
+  final ProfileService profileService = Get.put(ProfileService());
+  final OrdersService ordersService =
+      Get.find<OrdersService>(); // Add this line
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -37,6 +44,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
+    // Pre-fill customer info from profile if available
+    _prefillCustomerInfo();
+  }
+
+  void _prefillCustomerInfo() {
+    final profile = profileService.profile.value;
+    if (profile != null) {
+      _nameController.text = profile.name;
+      _emailController.text = profile.email;
+      if (profile.phone != null && profile.phone!.isNotEmpty) {
+        _phoneController.text = profile.phone!;
+      }
+    }
   }
 
   @override
@@ -69,18 +90,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _processBookingAfterPayment(String paymentId) async {
     try {
       // Book the ticket after successful payment
-      bool success = await eventService.bookTicket(
+      bool bookingSuccess = await eventService.bookTicket(
         widget.event.id!,
         widget.quantity,
       );
 
-      setState(() {
-        _isLoading = false;
-      });
+      if (bookingSuccess) {
+        // Create order record in Firestore after successful booking
+        bool orderSuccess = await ordersService.createOrder(
+          event: widget.event,
+          quantity: widget.quantity,
+          paymentId: paymentId,
+          paymentMethod: 'Razorpay',
+          customerName: _nameController.text.trim(),
+          customerEmail: _emailController.text.trim(),
+          customerPhone: _phoneController.text.trim(),
+        );
 
-      if (success) {
-        _showSuccessDialog(paymentId);
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (orderSuccess) {
+          _showSuccessDialog(paymentId);
+        } else {
+          _showSnackBar(
+            'Booking successful but failed to save order details. Your payment ID: $paymentId',
+            isError: true,
+          );
+        }
       } else {
+        setState(() {
+          _isLoading = false;
+        });
         _showSnackBar(
           'Booking failed after payment. Contact support with payment ID: $paymentId',
           isError: true,
@@ -90,7 +132,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() {
         _isLoading = false;
       });
-      _showSnackBar('Error: $e', isError: true);
+      _showSnackBar('Error processing booking: $e', isError: true);
     }
   }
 
@@ -99,6 +141,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _emailController.text.isEmpty ||
         _phoneController.text.isEmpty) {
       _showSnackBar('Please fill in all required fields', isError: true);
+      return;
+    }
+
+    // Validate email format
+    if (!GetUtils.isEmail(_emailController.text)) {
+      _showSnackBar('Please enter a valid email address', isError: true);
+      return;
+    }
+
+    // Validate phone number (basic validation)
+    if (_phoneController.text.length < 10) {
+      _showSnackBar('Please enter a valid phone number', isError: true);
       return;
     }
 
@@ -113,13 +167,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'rzp_test_1DP5mmOlF5G5ag', // Test key - replace with your actual test key
       'amount': (totalAmount * 100).toInt(), // Amount in paise
       'name': 'Event Booking',
-      'description': widget.event.title,
+      'description':
+          '${widget.event.title} - ${widget.quantity} ticket${widget.quantity > 1 ? 's' : ''}',
       'prefill': {
         'contact': _phoneController.text,
         'email': _emailController.text,
         'name': _nameController.text,
       },
       'theme': {'color': '#667eea'},
+      'retry': {'enabled': true, 'max_count': 1},
+      'send_sms_hash': true,
+      'remember_customer': false,
+      'timeout': 240, // 4 minutes timeout
+      'readonly': {'contact': false, 'email': false, 'name': false},
     };
 
     try {
@@ -128,7 +188,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() {
         _isLoading = false;
       });
-      _showSnackBar('Error: $e', isError: true);
+      _showSnackBar('Error opening payment: $e', isError: true);
     }
   }
 
@@ -164,36 +224,82 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Your tickets for "${widget.event.title}" have been booked successfully.',
+                'Your ${widget.quantity} ticket${widget.quantity > 1 ? 's' : ''} for "${widget.event.title}" have been booked successfully.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 10),
-              Text(
-                'Payment ID: $paymentId',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Payment ID:',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      paymentId,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF667eea),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Get.back();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF667eea),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Get.back();
+                        // Navigate to Orders screen
+                        // You can add this if you have named routes: Get.toNamed('/orders');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF667eea),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'View My Orders',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'Back to Events',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Get.back();
+                      },
+                      child: const Text(
+                        'Back to Events',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF667eea),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -209,7 +315,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         backgroundColor: isError ? Colors.red : const Color(0xFF667eea),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: Duration(seconds: isError ? 4 : 2),
+        duration: Duration(seconds: isError ? 6 : 3),
+        action: isError
+            ? SnackBarAction(
+                label: 'OK',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              )
+            : null,
       ),
     );
   }
@@ -446,7 +561,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Colors.grey[50]!, Colors.grey[100]!],
+                          colors: [Colors.grey[50]!, Colors.grey],
                         ),
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
@@ -555,7 +670,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       decoration: BoxDecoration(
                         gradient: _isLoading
                             ? LinearGradient(
-                                colors: [Colors.grey[400]!, Colors.grey[500]!],
+                                colors: [Colors.grey[400]!, Colors.grey],
                               )
                             : const LinearGradient(
                                 colors: [Color(0xFF667eea), Color(0xFF764ba2)],

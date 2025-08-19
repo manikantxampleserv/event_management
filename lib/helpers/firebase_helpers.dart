@@ -37,6 +37,7 @@ Widget buildProfileImage(
       width: width ?? 112,
       height: height ?? 112,
       fit: BoxFit.cover,
+
       placeholder: (context, url) => Container(
         color: Colors.grey[100],
         child: const Center(

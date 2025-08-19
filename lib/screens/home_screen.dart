@@ -192,6 +192,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 50,
                 height: 50,
                 fallbackLetter: fallbackLetter,
+                onImageUpdated: () {
+                  setState(() {});
+                },
               );
             }),
           ),
