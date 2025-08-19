@@ -139,7 +139,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     right: 20,
                     child: Row(
                       children: [
-                        // Share Button
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.5),
@@ -158,7 +157,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        // Favorite Button
                         Container(
                           decoration: BoxDecoration(
                             color: isFavorited

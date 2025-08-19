@@ -4,6 +4,7 @@ import 'package:event_management/helpers/cached_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mkx_ui_kit/widgets/custom_bottom_bar.dart';
 import '../models/event_model.dart';
 import '../services/auth_service.dart';
 import '../services/event_service.dart';
@@ -23,9 +24,39 @@ class _HomeScreenState extends State<HomeScreen> {
   final EventService eventService = Get.put(EventService());
   final ProfileService profileService = Get.put(ProfileService());
   final TextEditingController _searchController = TextEditingController();
+  int selectedIndex = 0;
   final PageController _carouselController = PageController();
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
+  final List<NavigationItem> navItems = [
+    NavigationItem(
+      icon: Icons.home_outlined,
+      label: 'Home',
+      selectedIcon: Icons.home_filled,
+    ),
+    NavigationItem(
+      icon: Icons.event_outlined,
+      label: 'Events',
+      selectedIcon: Icons.event,
+    ),
+    NavigationItem(
+      icon: Icons.receipt_outlined,
+      label: 'Orders',
+      selectedIcon: Icons.receipt,
+    ),
+
+    NavigationItem(
+      icon: Icons.settings_outlined,
+      label: 'Settings',
+      selectedIcon: Icons.settings,
+    ),
+  ];
+
+  void handleChange(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
 
   @override
   void initState() {
@@ -119,6 +150,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: CustomBottomBar(
+        handleChange: handleChange,
+        selectedIndex: selectedIndex,
+        navItems: navItems,
       ),
     );
   }
