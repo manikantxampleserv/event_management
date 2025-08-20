@@ -36,7 +36,6 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-
       // darkTheme: ThemeData(
       //   colorScheme: ColorScheme.fromSeed(
       //     seedColor: const Color(0xFF667eea),
@@ -45,7 +44,6 @@ class MyApp extends StatelessWidget {
       //   useMaterial3: true,
       // ),
       themeMode: ThemeMode.system,
-
       home: const SplashScreen(),
     );
   }

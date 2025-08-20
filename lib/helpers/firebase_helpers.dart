@@ -6,15 +6,38 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 final Map<String, Widget> _imageCache = {};
+final Map<String, int> _cacheTimestamps = {};
 
 Widget buildProfileImage(
   String? photoUrlOrPath, {
   double? width,
   double? height,
+  bool forceRefresh = false,
 }) {
   final cacheKey = '${photoUrlOrPath}_${width}_$height';
+  final now = DateTime.now().millisecondsSinceEpoch;
 
-  if (_imageCache.containsKey(cacheKey)) {
+  if (forceRefresh ||
+      (!photoUrlOrPath.toString().startsWith('http') &&
+          _cacheTimestamps.containsKey(cacheKey) &&
+          now - _cacheTimestamps[cacheKey]! > 30000)) {
+    _imageCache.remove(cacheKey);
+    _cacheTimestamps.remove(cacheKey);
+  }
+
+  if (photoUrlOrPath != null && photoUrlOrPath.isNotEmpty) {
+    final existingKeys = _imageCache.keys
+        .where((key) => key.startsWith('${photoUrlOrPath}_'))
+        .toList();
+    for (final key in existingKeys) {
+      if (key != cacheKey) {
+        _imageCache.remove(key);
+        _cacheTimestamps.remove(key);
+      }
+    }
+  }
+
+  if (_imageCache.containsKey(cacheKey) && !forceRefresh) {
     return _imageCache[cacheKey]!;
   }
 
@@ -26,18 +49,23 @@ Widget buildProfileImage(
       child: const Icon(Icons.person, size: 60, color: Color(0xFF667eea)),
     );
     _imageCache[cacheKey] = widget;
+    _cacheTimestamps[cacheKey] = now;
     return widget;
   }
 
   Widget imageWidget;
 
   if (photoUrlOrPath.startsWith('http')) {
+    final cacheBustedUrl = photoUrlOrPath.contains('?')
+        ? '$photoUrlOrPath&t=$now'
+        : '$photoUrlOrPath?t=$now';
+
     imageWidget = CachedNetworkImage(
-      imageUrl: photoUrlOrPath,
+      imageUrl: cacheBustedUrl,
       width: width ?? 112,
       height: height ?? 112,
       fit: BoxFit.cover,
-
+      key: ValueKey('${cacheBustedUrl}_$now'),
       placeholder: (context, url) => Container(
         color: Colors.grey[100],
         child: const Center(
@@ -54,6 +82,7 @@ Widget buildProfileImage(
     );
   } else {
     imageWidget = FutureBuilder<Map<String, dynamic>?>(
+      key: ValueKey('${photoUrlOrPath}_$now'),
       future: _getImageFromFirestore(photoUrlOrPath),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -96,9 +125,12 @@ Widget buildProfileImage(
             width: width ?? 112,
             height: height ?? 112,
             fit: BoxFit.cover,
+            key: ValueKey('memory_${photoUrlOrPath}_$now'),
           );
 
           _imageCache[cacheKey] = memoryImage;
+          _cacheTimestamps[cacheKey] = now;
+
           return memoryImage;
         } catch (e) {
           print('Error decoding Base64 image: $e');
@@ -115,6 +147,7 @@ Widget buildProfileImage(
 
   if (photoUrlOrPath.startsWith('http')) {
     _imageCache[cacheKey] = imageWidget;
+    _cacheTimestamps[cacheKey] = now;
   }
 
   return imageWidget;
@@ -122,6 +155,24 @@ Widget buildProfileImage(
 
 void clearImageCache() {
   _imageCache.clear();
+  _cacheTimestamps.clear();
+}
+
+void clearImageCacheForUrl(String? photoUrl) {
+  if (photoUrl == null) return;
+
+  final keysToRemove = _imageCache.keys
+      .where((key) => key.startsWith('${photoUrl}_'))
+      .toList();
+
+  for (final key in keysToRemove) {
+    _imageCache.remove(key);
+    _cacheTimestamps.remove(key);
+  }
+}
+
+void refreshImage(String? photoUrl) {
+  clearImageCacheForUrl(photoUrl);
 }
 
 Future<Map<String, dynamic>?> _getImageFromFirestore(

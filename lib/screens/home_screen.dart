@@ -1,10 +1,11 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
-import 'package:event_management/helpers/cached_avatar.dart';
+
+import 'package:event_management/helpers/firebase_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:mkx_ui_kit/widgets/custom_bottom_bar.dart';
+
 import '../models/event_model.dart';
 import '../services/auth_service.dart';
 import '../services/event_service.dart';
@@ -27,29 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _carouselController = PageController();
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
-  final List<NavigationItem> navItems = [
-    NavigationItem(
-      icon: Icons.home_outlined,
-      label: 'Home',
-      selectedIcon: Icons.home_filled,
-    ),
-    NavigationItem(
-      icon: Icons.event_outlined,
-      label: 'Events',
-      selectedIcon: Icons.event,
-    ),
-    NavigationItem(
-      icon: Icons.receipt_outlined,
-      label: 'Orders',
-      selectedIcon: Icons.receipt,
-    ),
-
-    NavigationItem(
-      icon: Icons.settings_outlined,
-      label: 'Settings',
-      selectedIcon: Icons.settings,
-    ),
-  ];
 
   @override
   void initState() {
@@ -187,14 +165,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? profile!.name[0].toUpperCase()
                   : firstLetter;
 
-              return CachedAvatarWidget(
-                photoUrl: profile?.photoUrl,
-                width: 50,
-                height: 50,
-                fallbackLetter: fallbackLetter,
-                onImageUpdated: () {
-                  setState(() {});
-                },
+              print('mkx: ${profile?.photoUrl}');
+
+              if (profile?.photoUrl == "") {
+                return Container(
+                  height: 50,
+                  width: 50,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color.fromARGB(255, 113, 139, 255),
+                  ),
+                  child: Center(
+                    child: Text(
+                      fallbackLetter,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromARGB(255, 140, 158, 234),
+                ),
+                child: ClipOval(
+                  child: buildProfileImage(
+                    profile?.photoUrl,
+                    width: 48,
+                    height: 48,
+                  ),
+                ),
               );
             }),
           ),
@@ -306,7 +310,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Stack(
           children: [
-            // Background image
             Container(
               width: double.infinity,
               height: double.infinity,
@@ -317,7 +320,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Gradient overlay
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -327,7 +329,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Content
             Positioned(
               bottom: 16,
               left: 16,

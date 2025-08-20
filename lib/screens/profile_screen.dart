@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:event_management/authentication/login_screen.dart';
 import 'package:event_management/helpers/firebase_helpers.dart';
+import 'package:event_management/screens/help_support_screen.dart';
+import 'package:event_management/screens/privacy_policy_screen.dart';
+import 'package:event_management/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,10 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId != null) {
       profileService.fetchProfile(userId);
 
-      // Force refresh after delay to ensure UI updates
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted && profileService.profile.value?.photoUrl != null) {
-          setState(() {}); // Force UI rebuild
+          setState(() {});
         }
       });
     } else {
@@ -43,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Helper method to force close all dialogs
   void _forceCloseAllDialogs() {
     if (Get.isDialogOpen == true) {
       Get.until((route) => !Get.isDialogOpen!);
@@ -57,7 +58,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Image URL validation
   bool _isValidImageUrl(String url) {
     final uri = Uri.tryParse(url);
     return uri != null &&
@@ -128,12 +128,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Remove Photo',
                     style: TextStyle(color: Colors.red),
                   ),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
                 ),
               ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -187,7 +183,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       if (pickedFile != null) {
-        // Show loading indicator
         Get.dialog(
           AlertDialog(
             content: Column(
@@ -223,7 +218,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         try {
-          // Upload new image FIRST
           final imageDownloadUrl = await storageService.uploadFileToFirestore(
             collectionName: 'profile_images',
             file: File(pickedFile.path),
@@ -231,7 +225,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
 
           if (imageDownloadUrl != null && imageDownloadUrl.isNotEmpty) {
-            // Only delete old image AFTER successful upload
             if (profile.photoUrl != null &&
                 profile.photoUrl!.isNotEmpty &&
                 (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
@@ -256,9 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final success = await profileService.updateProfile(updated);
 
             if (success) {
-              // Force UI refresh
               setState(() {});
-              // Also refresh profile data to ensure consistency
               await profileService.fetchProfile(userId);
 
               Get.snackbar(
@@ -331,22 +322,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pop(context);
 
     final bool? confirm = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Remove Profile Photo'),
-        content: const Text(
-          'Are you sure you want to remove your profile photo?',
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Remove Profile Photo',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            const Divider(height: 1, thickness: 0.3),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                'Are you sure you want to remove your profile photo?',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const Divider(height: 1, thickness: 0.3),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(result: false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Get.back(result: true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Remove'),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove'),
-          ),
-        ],
       ),
     );
 
@@ -374,7 +391,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return;
         }
 
-        // Delete from Firebase Storage if it's a Firebase image
         if (profile.photoUrl != null &&
             (profile.photoUrl!.contains('firebasestorage.googleapis.com') ||
                 profile.photoUrl!.contains('storage.googleapis.com'))) {
@@ -384,7 +400,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        // Update profile with null photoUrl
         final updated = profile.copyWith(
           photoUrl: null,
           updatedAt: DateTime.now(),
@@ -395,9 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _forceCloseAllDialogs();
 
         if (success) {
-          // Force UI refresh
           setState(() {});
-          // Also refresh profile data to ensure consistency
           await profileService.fetchProfile(userId);
 
           Get.snackbar(
@@ -541,7 +554,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Profile Photo Section
                   Center(
                     child: GestureDetector(
                       onTap: () => _showPhotoOptions(profile),
@@ -621,7 +633,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Save Button
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -812,12 +823,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Settings',
             subtitle: 'App preferences and configurations',
             onTap: () {
-              Get.snackbar(
-                'Info',
-                'Settings screen will be implemented',
-                backgroundColor: Colors.blue,
-                colorText: Colors.white,
-              );
+              Get.to(() => const SettingsScreen());
             },
           ),
           const Divider(height: 1),
@@ -826,12 +832,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Help & Support',
             subtitle: 'Get help and contact support',
             onTap: () {
-              Get.snackbar(
-                'Info',
-                'Help & Support screen will be implemented',
-                backgroundColor: Colors.blue,
-                colorText: Colors.white,
-              );
+              Get.to(() => const HelpSupportScreen());
             },
           ),
           const Divider(height: 1),
@@ -840,12 +841,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Privacy Policy',
             subtitle: 'Read our privacy policy',
             onTap: () {
-              Get.snackbar(
-                'Info',
-                'Privacy Policy screen will be implemented',
-                backgroundColor: Colors.blue,
-                colorText: Colors.white,
-              );
+              Get.to(() => const PrivacyPolicyScreen());
             },
           ),
         ],
@@ -978,7 +974,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Custom App Bar
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -994,7 +989,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Row(
                       children: [
-                        // Refresh button
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
@@ -1010,7 +1004,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Edit button
                         Obx(() {
                           final profile = profileService.profile.value;
                           if (profile == null) return const SizedBox();
@@ -1032,7 +1025,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -1110,7 +1102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          // Profile Picture Section
                           GestureDetector(
                             onTap: () => _showPhotoOptions(profile),
                             child: Stack(
