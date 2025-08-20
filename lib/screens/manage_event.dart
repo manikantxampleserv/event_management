@@ -195,198 +195,225 @@ class _EventFormDialogState extends State<EventFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        isEditing ? 'Edit Event' : 'Add Event',
-        style: const TextStyle(color: Colors.black),
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width * 0.05,
+        vertical: 40,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      titlePadding: const EdgeInsets.all(12),
-      contentPadding: const EdgeInsets.all(16),
-      actionsPadding: const EdgeInsets.all(12),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Event Title'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter event title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _venueController,
-                decoration: const InputDecoration(labelText: 'Venue'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter venue';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _timeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Time (e.g., 09:00 AM)',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter time';
-                        }
-                        return null;
-                      },
-                    ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: SingleChildScrollView(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEditing ? 'Edit Event' : 'Add Event',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Date'),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(_selectedDate),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(labelText: 'Event Title'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter event title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: _categories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCategory = newValue!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _venueController,
+                  decoration: const InputDecoration(labelText: 'Venue'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter venue';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _timeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Time (e.g., 09:00 AM)',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter time';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: _selectDate,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(labelText: 'Date'),
+                          child: Text(
+                            DateFormat('MMM dd, yyyy').format(_selectedDate),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(labelText: 'Price'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter price';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter valid price';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _seatsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Available Seats',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter seats';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Please enter valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _organizerController,
-                decoration: const InputDecoration(labelText: 'Organizer'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter organizer';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              const Text('Tags (Optional):'),
-              Wrap(
-                spacing: 5,
-                children: _availableTags.map((tag) {
-                  bool isSelected = _selectedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(
-                      tag,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _priceController,
+                        decoration: const InputDecoration(labelText: 'Price'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter price';
+                          }
+                          if (double.tryParse(value) == null) {
+                            return 'Please enter valid price';
+                          }
+                          return null;
+                        },
                       ),
                     ),
-                    showCheckmark: false,
-                    selectedColor: const Color(0xFF667eea),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedTags.add(tag);
-                        } else {
-                          _selectedTags.remove(tag);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _seatsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Available Seats',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter seats';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Please enter valid number';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _organizerController,
+                  decoration: const InputDecoration(labelText: 'Organizer'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter organizer';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Tags (Optional):',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 5,
+                  children: _availableTags.map((tag) {
+                    bool isSelected = _selectedTags.contains(tag);
+                    return FilterChip(
+                      label: Text(
+                        tag,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
+
+                      showCheckmark: false,
+                      selectedColor: const Color(0xFF667eea),
+                      selected: isSelected,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedTags.add(tag);
+                          } else {
+                            _selectedTags.remove(tag);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveEvent,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF667eea),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(isEditing ? 'Update' : 'Save'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveEvent,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF667eea),
-            foregroundColor: Colors.white,
-          ),
-          child: Text(isEditing ? 'Update' : 'Save'),
-        ),
-      ],
     );
   }
 }

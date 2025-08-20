@@ -543,19 +543,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              onPressed: () {
-                Get.back(); // Go back to profile to edit
-              },
-              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-              tooltip: 'Edit Profile',
-            ),
-          ),
         ],
       ),
     );

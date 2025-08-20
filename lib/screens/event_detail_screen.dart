@@ -25,7 +25,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       isFavorited = !isFavorited;
     });
 
-    // Show feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -40,7 +39,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   void _shareEvent() {
-    // Simulate share functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
