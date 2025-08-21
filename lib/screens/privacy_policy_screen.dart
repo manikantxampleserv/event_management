@@ -387,6 +387,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
@@ -660,17 +661,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
           _buildContactItem(
             icon: Icons.email_outlined,
             title: 'Email',
-            value: 'privacy@eventhub.com',
+            value: 'support@eventbooking.com',
           ),
           _buildContactItem(
             icon: Icons.phone_outlined,
             title: 'Phone',
-            value: '+1 (555) 123-4567',
+            value: '+91 8737018483',
           ),
           _buildContactItem(
             icon: Icons.location_on_outlined,
             title: 'Address',
-            value: '123 Privacy Street, Tech City, TC 12345',
+            value: 'B-18, Block-B, Sector 1, Lucknow, Uttar Pradesh, India',
           ),
         ],
       ),

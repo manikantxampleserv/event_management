@@ -19,7 +19,6 @@ class HelpSupportScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // App Bar
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -48,8 +47,6 @@ class HelpSupportScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -99,14 +96,9 @@ class HelpSupportScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 32),
-
-                        // Accordion Q&A
                         _buildAccordion(),
                         const SizedBox(height: 28),
-
-                        // Contact support card
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -151,7 +143,7 @@ class HelpSupportScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'support@eventhub.com',
+                                    'support@eventbooking.com',
                                     style: const TextStyle(
                                       color: Color(0xFF667eea),
                                       fontWeight: FontWeight.w600,
@@ -170,7 +162,7 @@ class HelpSupportScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '+1 (555) 987-6543',
+                                    '+91 8737018483',
                                     style: const TextStyle(
                                       color: Color(0xFF667eea),
                                       fontWeight: FontWeight.w600,
