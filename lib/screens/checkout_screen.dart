@@ -40,7 +40,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   late Razorpay _razorpay;
   bool _isLoading = false;
-  String _selectedPaymentMethod = 'razorpay';
+  final String _selectedPaymentMethod = 'razorpay';
 
   @override
   void initState() {

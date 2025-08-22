@@ -826,7 +826,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Get.to(() => const SettingsScreen());
             },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, thickness: 0.2),
           _buildActionButton(
             icon: Icons.help_outline,
             title: 'Help & Support',
@@ -835,7 +835,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Get.to(() => const HelpSupportScreen());
             },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, thickness: 0.2),
           _buildActionButton(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
@@ -899,10 +899,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSignOutButton() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -910,7 +909,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: Colors.red[100]!),
       ),
       child: TextButton.icon(
         onPressed: () async {

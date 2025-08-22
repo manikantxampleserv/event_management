@@ -7,7 +7,6 @@ import '../models/profile_model.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 
-// Theme Controller for managing dark/light mode
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
 
@@ -20,7 +19,6 @@ class ThemeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Initialize with system theme
     isDarkMode.value = Get.isPlatformDarkMode;
   }
 }
@@ -37,9 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService authService = Get.find<AuthService>();
   final ProfileService profileService = Get.find<ProfileService>();
 
-  bool _notificationsEnabled = true;
   bool _emailNotifications = false;
-  bool _pushNotifications = true;
   bool _locationServices = true;
 
   @override
@@ -179,7 +175,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Custom App Bar with Profile Integration
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -243,77 +238,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          // Profile Header Section
                           if (profile != null) _buildProfileHeader(profile),
 
                           const SizedBox(height: 32),
-
-                          // App Settings Section
-                          _buildSectionCard(
-                            title: 'App Settings',
-                            children: [
-                              // Dark Mode Toggle
-                              Obx(
-                                () => _buildSettingsTile(
-                                  icon: themeController.isDarkMode.value
-                                      ? Icons.dark_mode
-                                      : Icons.light_mode,
-                                  title: 'Dark Mode',
-                                  subtitle: themeController.isDarkMode.value
-                                      ? 'Dark theme enabled'
-                                      : 'Light theme enabled',
-                                  trailing: Switch(
-                                    value: themeController.isDarkMode.value,
-                                    onChanged: (value) {
-                                      themeController.toggleTheme();
-                                    },
-                                    activeColor: const Color(0xFF667eea),
-                                  ),
-                                  isFirst: true,
-                                ),
-                              ),
-
-                              const Divider(height: 1),
-
-                              _buildSettingsTile(
-                                icon: Icons.notifications_outlined,
-                                title: 'Notifications',
-                                subtitle: 'Manage notification preferences',
-                                trailing: Switch(
-                                  value: _notificationsEnabled,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _notificationsEnabled = value;
-                                    });
-                                  },
-                                  activeColor: const Color(0xFF667eea),
-                                ),
-                              ),
-
-                              const Divider(height: 1),
-
-                              _buildSettingsTile(
-                                icon: Icons.language_outlined,
-                                title: 'Language',
-                                subtitle: 'English (US)',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: () {
-                                  Get.snackbar(
-                                    'Info',
-                                    'Language selection coming soon',
-                                    backgroundColor: const Color(0xFF667eea),
-                                    colorText: Colors.white,
-                                  );
-                                },
-                                isLast: true,
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
 
                           // Privacy & Security Section
                           _buildSectionCard(
@@ -335,25 +262,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 isFirst: true,
                               ),
 
-                              const Divider(height: 1),
-
-                              _buildSettingsTile(
-                                icon: Icons.push_pin_outlined,
-                                title: 'Push Notifications',
-                                subtitle: 'Receive push notifications',
-                                trailing: Switch(
-                                  value: _pushNotifications,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _pushNotifications = value;
-                                    });
-                                  },
-                                  activeColor: const Color(0xFF667eea),
-                                ),
-                              ),
-
-                              const Divider(height: 1),
-
                               _buildSettingsTile(
                                 icon: Icons.location_on_outlined,
                                 title: 'Location Services',
@@ -368,8 +276,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   activeColor: const Color(0xFF667eea),
                                 ),
                               ),
-
-                              const Divider(height: 1),
 
                               _buildSettingsTile(
                                 icon: Icons.security_outlined,
@@ -387,7 +293,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                           const SizedBox(height: 20),
 
-                          // Support & Help Section
                           _buildSectionCard(
                             title: 'Support & Help',
                             children: [
@@ -403,8 +308,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 isFirst: true,
                               ),
 
-                              const Divider(height: 1),
-
                               _buildSettingsTile(
                                 icon: Icons.feedback_outlined,
                                 title: 'Send Feedback',
@@ -415,21 +318,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 onTap: () {},
                               ),
-
-                              const Divider(height: 1),
-
-                              _buildSettingsTile(
-                                icon: Icons.star_outline,
-                                title: 'Rate App',
-                                subtitle: 'Rate us on the app store',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: () {},
-                              ),
-
-                              const Divider(height: 1),
 
                               _buildSettingsTile(
                                 icon: Icons.info_outline,
@@ -447,12 +335,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                           const SizedBox(height: 20),
 
-                          // Sign Out Button
                           _buildSignOutButton(),
 
                           const SizedBox(height: 40),
 
-                          // App Version
                           Center(
                             child: Text(
                               'Event Management App v1.0.0',
@@ -647,10 +533,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSignOutButton() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -658,7 +543,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: Colors.red[100]!),
       ),
       child: TextButton.icon(
         onPressed: _showLogoutConfirmation,
@@ -670,9 +555,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
-        ),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
     );

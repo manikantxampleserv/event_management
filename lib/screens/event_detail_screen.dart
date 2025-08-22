@@ -326,7 +326,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Tags Section
                     if (widget.event.tags.isNotEmpty) ...[
                       const Text(
                         'Event Tags',
@@ -367,7 +366,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       const SizedBox(height: 15),
                     ],
 
-                    // Pricing Section
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -375,9 +373,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 5,
+                            offset: Offset(0, 0),
                           ),
                         ],
                       ),
@@ -501,33 +499,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 15),
-
-                    // Book Ticket Button
                     Container(
                       width: double.infinity,
-                      height: 60,
                       decoration: BoxDecoration(
-                        gradient: widget.event.availableSeats > 0
-                            ? const LinearGradient(
-                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                              )
-                            : LinearGradient(
-                                colors: [Colors.grey[400]!, Colors.grey[500]!],
-                              ),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: widget.event.availableSeats > 0
-                            ? [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF667eea,
-                                  ).withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : [],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.green[200]!),
                       ),
-                      child: ElevatedButton(
+                      child: TextButton.icon(
                         onPressed: widget.event.availableSeats > 0
                             ? () {
                                 Get.to(
@@ -540,35 +526,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 );
                               }
                             : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                        icon: const Icon(
+                          Icons.shopping_cart,
+                          color: Colors.green,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              widget.event.availableSeats > 0
-                                  ? Icons.shopping_cart
-                                  : Icons.block,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              widget.event.availableSeats > 0
-                                  ? 'Book Tickets Now'
-                                  : 'Sold Out',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
+                        label: Text(
+                          widget.event.availableSeats > 0
+                              ? 'Book Tickets Now'
+                              : 'Sold Out',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
                       ),
                     ),
