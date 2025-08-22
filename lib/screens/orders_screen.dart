@@ -1,3 +1,4 @@
+import 'package:event_management/helpers/safe_event_image.dart';
 import 'package:event_management/services/orders_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -500,7 +501,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Event image
+                // Event image - Updated to use SafeEventImage
                 Container(
                   width: 80,
                   height: 80,
@@ -514,34 +515,39 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       ),
                     ],
                   ),
-                  child: ClipRRect(
+                  child: SafeEventImage(
+                    imagePath: order.eventImageUrl,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      order.eventImageUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF667eea),
-                              ),
-                            ),
+                    placeholder: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF667eea),
                           ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.event,
-                            color: Colors.grey,
-                            size: 40,
-                          ),
-                        );
-                      },
+                        ),
+                      ),
+                    ),
+                    errorWidget: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.event,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),

@@ -5,7 +5,6 @@ class EventModel {
   final String title;
   final String description;
   final String category;
-  final String imageUrl;
   final DateTime date;
   final String time;
   final String venue;
@@ -24,7 +23,6 @@ class EventModel {
     required this.title,
     required this.description,
     required this.category,
-    required this.imageUrl,
     required this.date,
     required this.time,
     required this.venue,
@@ -76,7 +74,6 @@ class EventModel {
       title: data['title']?.toString() ?? 'Untitled Event',
       description: data['description']?.toString() ?? '',
       category: data['category']?.toString() ?? 'General',
-      imageUrl: data['imageUrl']?.toString() ?? '',
       date: eventDate,
       time: data['time']?.toString() ?? '12:00 PM',
       venue: data['venue']?.toString() ?? '',
@@ -128,7 +125,6 @@ class EventModel {
       'title': title.trim(),
       'description': description.trim(),
       'category': category.trim(),
-      'imageUrl': imageUrl.trim(),
       'date': Timestamp.fromDate(date),
       'time': time.trim(),
       'venue': venue.trim(),
@@ -168,7 +164,6 @@ class EventModel {
       title: title ?? this.title,
       description: description ?? this.description,
       category: category ?? this.category,
-      imageUrl: imageUrl ?? this.imageUrl,
       date: date ?? this.date,
       time: time ?? this.time,
       venue: venue ?? this.venue,
@@ -184,7 +179,7 @@ class EventModel {
     );
   }
 
-  String get primaryImage => thumbnail.isNotEmpty ? thumbnail : imageUrl;
+  String get primaryImage => thumbnail.isNotEmpty ? thumbnail : '';
   String get displayImage => primaryImage.isNotEmpty ? primaryImage : '';
   bool get hasImages => thumbnail.isNotEmpty || eventImages.isNotEmpty;
   bool get hasThumbnail => thumbnail.isNotEmpty;

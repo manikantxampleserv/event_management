@@ -117,7 +117,7 @@ class _EventListScreenState extends State<EventListScreen> {
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -216,7 +216,7 @@ class _EventListScreenState extends State<EventListScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.70,
       ),
       itemCount: eventService.filteredEvents.length,
       itemBuilder: (context, index) {
@@ -234,7 +234,7 @@ class _EventListScreenState extends State<EventListScreen> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -242,27 +242,84 @@ class _EventListScreenState extends State<EventListScreen> {
       ),
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(10),
-              topRight: Radius.circular(10),
-            ),
-            child: SafeEventImage(
-              imagePath: event.imageUrl,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              placeholder: Container(
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: Container(
-                color: Colors.grey[100],
-                child: const Center(
-                  child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
+                ),
+                child: SafeEventImage(
+                  imagePath: event.thumbnail,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  placeholder: Container(
+                    color: Colors.grey[200],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: Container(
+                    color: Colors.grey[100],
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              // Add edit and delete buttons to list view
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: IconButton(
+                        onPressed: () => _showEventFormDialog(event: event),
+                        icon: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: IconButton(
+                        onPressed: () => _showDeleteConfirmation(event),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
 
           Padding(
@@ -377,7 +434,7 @@ class _EventListScreenState extends State<EventListScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -396,7 +453,7 @@ class _EventListScreenState extends State<EventListScreen> {
               child: Stack(
                 children: [
                   SafeEventImage(
-                    imagePath: event.imageUrl,
+                    imagePath: event.thumbnail,
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
@@ -422,7 +479,7 @@ class _EventListScreenState extends State<EventListScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withValues(alpha: 0.6),
                         ],
                       ),
                     ),
@@ -457,7 +514,7 @@ class _EventListScreenState extends State<EventListScreen> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: IconButton(
@@ -477,7 +534,7 @@ class _EventListScreenState extends State<EventListScreen> {
                         const SizedBox(width: 2),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: IconButton(
@@ -521,7 +578,7 @@ class _EventListScreenState extends State<EventListScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),

@@ -364,8 +364,6 @@ class _EventFormDialogState extends State<EventFormDialog> {
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
             category: _selectedCategory,
-            imageUrl:
-                finalThumbnailDocPath, // Keep both imageUrl and thumbnail in sync
             date: _selectedDate,
             time: _timeController.text.trim(),
             venue: _venueController.text.trim(),

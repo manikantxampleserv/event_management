@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:event_management/helpers/safe_event_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -81,22 +82,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 children: [
                   Hero(
                     tag: 'event-${widget.event.id}',
-                    child: Image.network(
-                      widget.event.imageUrl,
+                    child: SafeEventImage(
+                      imagePath: widget.event.thumbnail,
                       fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF667eea),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
                     ),
                   ),
                   Container(
@@ -258,44 +246,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             color: Colors.black87,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isExpanded = !isExpanded;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF667eea).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  isExpanded ? 'Show Less' : 'Show More',
-                                  style: const TextStyle(
-                                    color: Color(0xFF667eea),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  isExpanded
-                                      ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
-                                  color: const Color(0xFF667eea),
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -419,19 +369,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                     // Pricing Section
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF667eea).withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
@@ -443,7 +389,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               const Text(
                                 'Price per ticket:',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -454,13 +400,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: const Color(
+                                    0xFF667eea,
+                                  ).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
                                   '₹${widget.event.price.toStringAsFixed(2)}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: Color(0xFF667eea),
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -475,7 +423,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               const Text(
                                 'Quantity:',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -496,22 +444,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: const Color(
+                                        0xFF667eea,
+                                      ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
                                     ),
                                     child: Text(
                                       selectedQuantity.toString(),
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: Color(0xFF667eea),
                                       ),
                                     ),
                                   ),
@@ -529,12 +472,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: const Color(0xFF667eea).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -542,7 +481,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 const Text(
                                   'Total Amount:',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.black87,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -550,7 +489,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 Text(
                                   '₹${(widget.event.price * selectedQuantity).toStringAsFixed(2)}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: Color(0xFF667eea),
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -711,15 +650,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Container(
       decoration: BoxDecoration(
         color: enabled
-            ? Colors.white.withOpacity(0.2)
-            : Colors.white.withOpacity(0.1),
+            ? Color(0xFF667eea).withOpacity(0.2)
+            : Color(0xFF667eea).withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
         onPressed: enabled ? onPressed : null,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
         icon: Icon(
           icon,
-          color: enabled ? Colors.white : Colors.white.withOpacity(0.5),
+          color: enabled
+              ? Color(0xFF667eea)
+              : Color(0xFF667eea).withOpacity(0.5),
           size: 28,
         ),
       ),

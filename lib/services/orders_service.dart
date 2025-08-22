@@ -47,7 +47,7 @@ class OrdersService extends GetxService {
         eventId: event.id!,
         userId: userId,
         eventTitle: event.title,
-        eventImageUrl: event.imageUrl,
+        eventImageUrl: event.thumbnail,
         eventCategory: event.category,
         eventDate: event.date,
         eventTime: event.time,
@@ -116,7 +116,7 @@ class OrdersService extends GetxService {
             final eventData = EventModel.fromFirestore(eventDoc);
             ordersList[i] = ordersList[i].copyWith(
               eventTitle: eventData.title,
-              eventImageUrl: eventData.imageUrl,
+              eventImageUrl: eventData.thumbnail,
               venue: eventData.venue,
               eventCategory: eventData.category,
             );
