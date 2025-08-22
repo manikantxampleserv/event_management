@@ -329,7 +329,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Custom App Bar
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -359,7 +358,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
 
-              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -369,13 +367,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Event Summary Card
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -428,7 +425,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       Text(
                                         '${DateFormat('MMM dd, yyyy •').format(widget.event.date)} ${widget.event.time}',
                                         style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 12,
                                           color: Colors.grey[600],
                                         ),
                                       ),
@@ -625,16 +622,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                           const SizedBox(height: 24),
 
-                          // Security Note - MOVED ABOVE BUTTON
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.blue[50],
+                              color: Colors.green[50],
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.blue[200]!,
-                                width: 1,
-                              ),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -642,12 +634,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
+                                    color: Colors.green.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: const Icon(
                                     Icons.security,
-                                    color: Colors.blue,
+                                    color: Colors.green,
                                     size: 24,
                                   ),
                                 ),
@@ -682,7 +674,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                           const SizedBox(height: 16),
 
-                          // Pay Now Button
                           Container(
                             width: double.infinity,
                             height: 60,
