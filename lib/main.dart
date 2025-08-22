@@ -6,6 +6,7 @@ import 'package:event_management/services/storage_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 
@@ -28,7 +29,6 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Event Management',
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF667eea),
@@ -36,14 +36,6 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      // darkTheme: ThemeData(
-      //   colorScheme: ColorScheme.fromSeed(
-      //     seedColor: const Color(0xFF667eea),
-      //     brightness: Brightness.dark,
-      //   ),
-      //   useMaterial3: true,
-      // ),
-      themeMode: ThemeMode.system,
       home: const SplashScreen(),
     );
   }
