@@ -1,14 +1,14 @@
-import 'package:event_management/services/auth_service.dart';
-import 'package:event_management/services/event_service.dart';
-import 'package:event_management/services/orders_service.dart';
-import 'package:event_management/services/profile_service.dart';
-import 'package:event_management/services/storage_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
+import 'services/auth_service.dart';
+import 'services/event_service.dart';
+import 'services/orders_service.dart';
+import 'services/profile_service.dart';
+import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:event_management/authentication/login_screen.dart';
 import 'package:event_management/layout/main_layout.dart';
 import 'package:event_management/services/auth_service.dart';
@@ -122,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -209,7 +207,7 @@ class _SplashScreenState extends State<SplashScreen>
                         Text(
                           'Loading...',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 14,
                           ),
                         ),

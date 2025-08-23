@@ -35,11 +35,9 @@ class OrdersService extends GetxService {
   }) async {
     try {
       final userId = authService.user?.uid;
-
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-
       final now = DateTime.now();
       final totalAmount = event.price * quantity;
 
@@ -75,7 +73,6 @@ class OrdersService extends GetxService {
 
       return true;
     } catch (e) {
-      print('Error creating order: $e');
       return false;
     }
   }
@@ -87,7 +84,6 @@ class OrdersService extends GetxService {
       final userId = authService.user?.uid;
 
       if (userId == null) {
-        print('User not authenticated');
         return;
       }
 
@@ -122,14 +118,13 @@ class OrdersService extends GetxService {
             );
           }
         } catch (e) {
-          print('Error fetching event data for order ${ordersList[i].id}: $e');
+          return;
         }
       }
 
       orders.value = ordersList;
       filteredOrders.value = ordersList;
     } catch (e) {
-      print('Error fetching orders: $e');
       Get.snackbar(
         'Error',
         'Failed to fetch orders',
@@ -191,7 +186,6 @@ class OrdersService extends GetxService {
 
       return true;
     } catch (e) {
-      print('Error updating order status: $e');
       return false;
     }
   }

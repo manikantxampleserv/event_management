@@ -49,9 +49,9 @@ class _EventListScreenState extends State<EventListScreen> {
             ),
             TextButton(
               onPressed: () async {
+                if (!mounted) return;
                 Navigator.of(context).pop();
                 await eventService.deleteEvent(event.id!);
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -108,7 +108,6 @@ class _EventListScreenState extends State<EventListScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Search Bar
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: Container(
@@ -138,7 +137,7 @@ class _EventListScreenState extends State<EventListScreen> {
                   ),
                 ),
               ),
-
+              const SizedBox(height: 10),
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(

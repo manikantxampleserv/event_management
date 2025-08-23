@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:event_management/helpers/safe_event_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -94,7 +92,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                       ),
                     ),
@@ -104,11 +102,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     left: 20,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -127,11 +125,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -146,12 +144,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         Container(
                           decoration: BoxDecoration(
                             color: isFavorited
-                                ? Colors.pink.withOpacity(0.8)
-                                : Colors.black.withOpacity(0.5),
+                                ? Colors.pink.withValues(alpha: 0.8)
+                                : Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -187,7 +185,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -273,7 +271,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -373,7 +371,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 5,
                             offset: Offset(0, 0),
                           ),
@@ -400,7 +398,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFF667eea,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
@@ -444,7 +442,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     decoration: BoxDecoration(
                                       color: const Color(
                                         0xFF667eea,
-                                      ).withOpacity(0.1),
+                                      ).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
@@ -470,7 +468,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF667eea).withOpacity(0.1),
+                              color: const Color(
+                                0xFF667eea,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
@@ -542,7 +542,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -566,7 +566,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -577,7 +577,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -620,8 +620,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Container(
       decoration: BoxDecoration(
         color: enabled
-            ? Color(0xFF667eea).withOpacity(0.2)
-            : Color(0xFF667eea).withOpacity(0.1),
+            ? Color(0xFF667eea).withValues(alpha: 0.2)
+            : Color(0xFF667eea).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
@@ -633,7 +633,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           icon,
           color: enabled
               ? Color(0xFF667eea)
-              : Color(0xFF667eea).withOpacity(0.5),
+              : Color(0xFF667eea).withValues(alpha: 0.5),
           size: 28,
         ),
       ),

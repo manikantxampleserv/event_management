@@ -11,26 +11,14 @@ class ProfileService extends GetxController {
 
   Future<void> fetchProfile(String userId) async {
     isLoading.value = true;
-    print('Fetching profile for userId: $userId');
-
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
-      print('Document exists: ${doc.exists}');
-
       if (doc.exists) {
-        print('Document data: ${doc.data()}');
         final profileData = ProfileModel.fromFirestore(doc);
         profile.value = profileData;
-        print(
-          'Profile set successfully with photoUrl: ${profile.value?.photoUrl}',
-        );
       } else {
-        print('No document found for userId: $userId - Creating new profile');
-
-        // Get auth service to access user data
         final authService = Get.find<AuthService>();
 
-        // Create new profile with auth data
         final newProfile = ProfileModel(
           id: userId,
           name: authService.user?.displayName ?? 'New User',
@@ -40,11 +28,9 @@ class ProfileService extends GetxController {
           updatedAt: DateTime.now(),
         );
 
-        // Create the profile in Firestore
         await createProfile(newProfile);
       }
     } catch (e) {
-      print('Error fetching profile: $e');
       Get.snackbar(
         'Error',
         'Failed to load profile: ${e.toString()}',
@@ -63,12 +49,8 @@ class ProfileService extends GetxController {
           .doc(updatedProfile.id)
           .update(updatedProfile.toFirestore());
       profile.value = updatedProfile;
-      print(
-        'Profile updated successfully with photoUrl: ${updatedProfile.photoUrl}',
-      );
       return true;
     } catch (e) {
-      print('Error updating profile: $e');
       Get.snackbar(
         'Error',
         'Failed to update profile: ${e.toString()}',
@@ -86,11 +68,8 @@ class ProfileService extends GetxController {
           .doc(profileModel.id)
           .set(profileModel.toFirestore());
       profile.value = profileModel;
-
-      print('Profile created successfully for user: ${profileModel.id}');
       return true;
     } catch (e) {
-      print('Error creating profile: $e');
       return false;
     }
   }
@@ -103,12 +82,10 @@ class ProfileService extends GetxController {
       }
       return null;
     } catch (e) {
-      print('Error getting profile by id: $e');
       return null;
     }
   }
 
-  // Method to create profile immediately after user signs up
   Future<void> createProfileOnSignUp(
     String userId,
     String email, {
@@ -124,10 +101,14 @@ class ProfileService extends GetxController {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-
       await createProfile(newProfile);
     } catch (e) {
-      print('Error creating profile on signup: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to create profile on signup: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 }

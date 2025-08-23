@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:event_management/helpers/safe_event_image.dart';
 import 'package:event_management/screens/orders_screen.dart';
 import 'package:event_management/services/profile_service.dart';
@@ -49,7 +47,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-
     _prefillCustomerInfo();
   }
 
@@ -194,7 +191,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: const Icon(Icons.check, color: Colors.green, size: 50),
@@ -335,7 +332,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -380,7 +377,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -440,7 +437,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(
                                                 0xFF667eea,
-                                              ).withOpacity(0.1),
+                                              ).withValues(alpha: 0.1),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
@@ -471,7 +468,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               border: Border.all(color: Colors.grey[200]!),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -563,7 +560,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               border: Border.all(color: Colors.grey[200]!),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -634,7 +631,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
+                                    color: Colors.green.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: const Icon(
@@ -676,62 +673,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                           Container(
                             width: double.infinity,
-                            height: 60,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF667eea,
-                                  ).withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
+                              border: Border.all(color: Colors.green[200]!),
                             ),
-                            child: ElevatedButton(
+                            child: TextButton.icon(
                               onPressed: _isLoading
                                   ? null
                                   : _openRazorpayCheckout,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                              icon: const Icon(
+                                Icons.shopping_cart,
+                                color: Colors.green,
+                              ),
+                              label: Text(
+                                'Pay ₹${totalAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
                                 ),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.payment,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          'Pay ₹${totalAmount.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
                             ),
                           ),
 

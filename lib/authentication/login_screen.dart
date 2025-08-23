@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'package:event_management/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -162,7 +161,6 @@ class _LoginScreenState extends State<LoginScreen>
       _isLoading = false;
     });
     _showSnackBar(message);
-    // Use WidgetsBinding to schedule navigation after the current frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.offAll(() => const HomeScreen());
     });
@@ -211,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen>
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -247,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen>
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -286,45 +284,14 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // // Divider
-                      // Row(
-                      //   children: [
-                      //     Expanded(
-                      //       child: Container(
-                      //         height: 1,
-                      //         color: Colors.white.withOpacity(0.3),
-                      //       ),
-                      //     ),
-                      //     Padding(
-                      //       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      //       child: Text(
-                      //         'or',
-                      //         style: TextStyle(
-                      //           color: Colors.white.withOpacity(0.7),
-                      //           fontWeight: FontWeight.w500,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //     Expanded(
-                      //       child: Container(
-                      //         height: 1,
-                      //         color: Colors.white.withOpacity(0.3),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-                      // const SizedBox(height: 20),
-
-                      // Email/Password Login/Register Form
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
+                          color: Colors.white.withValues(alpha: 0.95),
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
+                              color: Colors.black.withValues(alpha: 0.08),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -462,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen>
                       Text(
                         'By continuing, you agree to our Terms of Service and Privacy Policy',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                         textAlign: TextAlign.center,

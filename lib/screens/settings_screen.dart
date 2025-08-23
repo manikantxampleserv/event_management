@@ -163,6 +163,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF667eea),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _refreshProfile,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
@@ -172,192 +185,156 @@ class _SettingsScreenState extends State<SettingsScreen> {
             colors: [Color(0xFF667eea), Color(0xFF764ba2)],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Settings',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.refresh, color: Colors.white),
-                        onPressed: _refreshProfile,
-                        tooltip: 'Refresh',
-                      ),
-                    ),
-                  ],
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                 ),
-              ),
-
-              // Content
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(30),
-                    ),
-                  ),
-                  child: Obx(() {
-                    if (profileService.isLoading.value) {
-                      return const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(color: Color(0xFF667eea)),
-                            SizedBox(height: 16),
-                            Text(
-                              'Loading settings...',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    final profile = profileService.profile.value;
-
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                child: Obx(() {
+                  if (profileService.isLoading.value) {
+                    return const Center(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (profile != null) _buildProfileHeader(profile),
-
-                          const SizedBox(height: 32),
-
-                          // Privacy & Security Section
-                          _buildSectionCard(
-                            title: 'Privacy & Security',
-                            children: [
-                              _buildSettingsTile(
-                                icon: Icons.email_outlined,
-                                title: 'Email Notifications',
-                                subtitle: 'Receive updates via email',
-                                trailing: Switch(
-                                  value: _emailNotifications,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _emailNotifications = value;
-                                    });
-                                  },
-                                  activeColor: const Color(0xFF667eea),
-                                ),
-                                isFirst: true,
-                              ),
-
-                              _buildSettingsTile(
-                                icon: Icons.location_on_outlined,
-                                title: 'Location Services',
-                                subtitle: 'Allow location access for events',
-                                trailing: Switch(
-                                  value: _locationServices,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _locationServices = value;
-                                    });
-                                  },
-                                  activeColor: const Color(0xFF667eea),
-                                ),
-                              ),
-
-                              _buildSettingsTile(
-                                icon: Icons.security_outlined,
-                                title: 'Privacy Policy',
-                                subtitle: 'Read our privacy policy',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: () {},
-                                isLast: true,
-                              ),
-                            ],
+                          CircularProgressIndicator(color: Color(0xFF667eea)),
+                          SizedBox(height: 10),
+                          Text(
+                            'Loading settings...',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
-
-                          const SizedBox(height: 20),
-
-                          _buildSectionCard(
-                            title: 'Support & Help',
-                            children: [
-                              _buildSettingsTile(
-                                icon: Icons.help_outline,
-                                title: 'Help Center',
-                                subtitle: 'Get help and support',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: () {},
-                                isFirst: true,
-                              ),
-
-                              _buildSettingsTile(
-                                icon: Icons.feedback_outlined,
-                                title: 'Send Feedback',
-                                subtitle: 'Help us improve the app',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: () {},
-                              ),
-
-                              _buildSettingsTile(
-                                icon: Icons.info_outline,
-                                title: 'About',
-                                subtitle: 'App version and information',
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                onTap: _showAboutDialog,
-                                isLast: true,
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          _buildSignOutButton(),
-
-                          const SizedBox(height: 40),
-
-                          Center(
-                            child: Text(
-                              'Event Management App v1.0.0',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
                         ],
                       ),
                     );
-                  }),
-                ),
+                  }
+
+                  final profile = profileService.profile.value;
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        if (profile != null) _buildProfileHeader(profile),
+
+                        const SizedBox(height: 20),
+
+                        _buildSectionCard(
+                          title: 'Privacy & Security',
+                          children: [
+                            _buildSettingsTile(
+                              icon: Icons.email_outlined,
+                              title: 'Email Notifications',
+                              subtitle: 'Receive updates via email',
+                              trailing: Switch(
+                                value: _emailNotifications,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _emailNotifications = value;
+                                  });
+                                },
+                                activeColor: const Color(0xFF667eea),
+                              ),
+                              isFirst: true,
+                            ),
+
+                            _buildSettingsTile(
+                              icon: Icons.location_on_outlined,
+                              title: 'Location Services',
+                              subtitle: 'Allow location access for events',
+                              trailing: Switch(
+                                value: _locationServices,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _locationServices = value;
+                                  });
+                                },
+                                activeColor: const Color(0xFF667eea),
+                              ),
+                            ),
+
+                            _buildSettingsTile(
+                              icon: Icons.security_outlined,
+                              title: 'Privacy Policy',
+                              subtitle: 'Read our privacy policy',
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              onTap: () {},
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        _buildSectionCard(
+                          title: 'Support & Help',
+                          children: [
+                            _buildSettingsTile(
+                              icon: Icons.help_outline,
+                              title: 'Help Center',
+                              subtitle: 'Get help and support',
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              onTap: () {},
+                              isFirst: true,
+                            ),
+
+                            _buildSettingsTile(
+                              icon: Icons.feedback_outlined,
+                              title: 'Send Feedback',
+                              subtitle: 'Help us improve the app',
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              onTap: () {},
+                            ),
+
+                            _buildSettingsTile(
+                              icon: Icons.info_outline,
+                              title: 'About',
+                              subtitle: 'App version and information',
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              onTap: _showAboutDialog,
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        _buildSignOutButton(),
+
+                        const SizedBox(height: 40),
+
+                        Center(
+                          child: Text(
+                            'Event Management App v1.0.0',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  );
+                }),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -372,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           end: Alignment.bottomRight,
           colors: [Color(0xFF667eea), Color(0xFF764ba2)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -414,7 +391,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   profile.email,
                   style: const TextStyle(fontSize: 14, color: Colors.white70),
